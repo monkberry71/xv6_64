@@ -14,7 +14,7 @@ LDFLAGS = -m elf_x86_64 \
 -nostdlib \
 -T kernel/linker.ld
 
-OBJS = build/main.o build/entry.o
+OBJS = build/main.o build/entry.o build/uart.o
 GRUB_MODULES = part_gpt fat normal multiboot2 all_video
 
 .PHONY: run clean
@@ -23,9 +23,15 @@ build/%.o: kernel/%.asm
 	@mkdir -p build
 	$(AS) $(ASFLAGS) $< $@ # fasm... rly?
 
+
 build/%.o: kernel/%.c
 	@mkdir -p build
 	$(CC) $(CFLAGS) -c $< -o $@
+
+build/%.o: kernel/driver/%.c
+	@mkdir -p build
+	$(CC) $(CFLAGS) -c $< -o $@
+
 
 build/kernel.elf: $(OBJS)
 	$(LD) $(LDFLAGS) $^ -o $@
