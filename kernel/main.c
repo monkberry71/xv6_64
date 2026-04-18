@@ -4,6 +4,9 @@
 #include "mmu.h"
 #include "memlayout.h"
 #include "bump.h"
+#include "mb2.h"
+
+extern struct mb2_info* reserved_mb2_info;
 
 int main(uint32_t mb2_info_phys) {
     // uint32_t* test_writing_point = KERN_BASE + 8;
@@ -11,12 +14,18 @@ int main(uint32_t mb2_info_phys) {
     // test ===================
 
     init_serial();
-    serial_puts("Hello ");
+    serial_puts("Hello\n");
 
     bump_init();
-    uint32_t* bump_test_ptr = bump_alloc_page_4kb();
-    memcpy(bump_test_ptr, "DEADBEEF", 9);
-    serial_puts((void*)bump_test_ptr);
+    preserve_mb2(mb2_info_phys);
 
+    serial_hex((uint64_t)reserved_mb2_info->total_size);
+    serial_puts("\n");
+    // uint32_t* bump_test_ptr = bump_alloc_page_4kb();
+    // memcpy(bump_test_ptr, "DEADBEEF", 9);
+    // serial_puts((void*)bump_test_ptr);
+
+
+    serial_puts("Bye\n");
     for(;;);
 }
