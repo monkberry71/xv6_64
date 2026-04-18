@@ -28,10 +28,20 @@ int is_transmit_empty() {
    return inb(COM1 + 5) & 0x20;
 }
 
-void write_serial(char a) {
+void serial_putc(char a) {
    while (is_transmit_empty() == 0);
 
    outb(COM1,a);
+}
+
+void serial_hex(uint64_t v) {
+    char buf[17];
+    buf[16] = 0;
+    for(int i = 15; i >= 0; i--) {
+        buf[i] = "0123456789abcdef"[v & 0xf];
+        v >>= 4;
+    }
+    serial_puts(buf);
 }
 
 // void serial_init(void) {
@@ -49,5 +59,5 @@ void write_serial(char a) {
 // }
 
 void serial_puts(const char *s) {
-    while (*s) write_serial(*s++);
+    while (*s) serial_putc(*s++);
 }
