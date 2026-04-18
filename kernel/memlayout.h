@@ -8,5 +8,5 @@
 #define V2P(v) ((uint64_t)(v) - PAGE_OFFSET)
 #define P2V(p) ((void*)((uint64_t)(p) + PAGE_OFFSET))
 
-#define V2P_KERN(v) ((uint64_t)(v) - KERN_BASE + KERN_PHYS_BASE)
-#define P2V_KERN(p) ((void*)((uint64_t)(p) - KERN_PHYS_BASE + KERN_BASE))
+#define V2P_KERN(v) ((uint64_t)(v) - KERN_BASE)
+#define P2V_KERN(p) ((void*)((uint64_t)(p) + KERN_BASE))
