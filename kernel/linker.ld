@@ -47,7 +47,8 @@ SECTIONS {
     }
 
     . = ALIGN(4096);
-    _end = .; 
+    _kernel_end = .; 
+    _kernel_phys_end = . - KERNBASE;
     /* use V2P(end) if you need it plz*/
 
 }
