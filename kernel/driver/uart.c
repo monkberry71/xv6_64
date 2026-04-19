@@ -33,6 +33,9 @@ void serial_putc(char a) {
 
    outb(COM1,a);
 }
+void serial_puts(const char *s) {
+    while (*s) serial_putc(*s++);
+}
 
 void serial_hex(uint64_t v) {
     char buf[17];
@@ -57,7 +60,3 @@ void serial_hex(uint64_t v) {
 //     while (!(inb(COM1 + 5) & 0x20));
 //     outb(COM1, c);
 // }
-
-void serial_puts(const char *s) {
-    while (*s) serial_putc(*s++);
-}

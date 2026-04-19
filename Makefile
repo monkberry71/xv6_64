@@ -8,7 +8,8 @@ CFLAGS = -m64 \
 -fno-pic \
 -fno-pie \
 -mno-red-zone \
--mcmodel=kernel 
+-mcmodel=kernel \
+-g
 
 LDFLAGS = -m elf_x86_64 \
 -nostdlib \
@@ -17,7 +18,7 @@ LDFLAGS = -m elf_x86_64 \
 OBJS = build/main.o build/entry.o build/uart.o build/string.o build/bump.o build/mb2.o
 GRUB_MODULES = part_gpt fat normal multiboot2 all_video
 
-.PHONY: run clean
+.PHONY: run clean debug
 
 build/%.o: kernel/%.asm
 	@mkdir -p build
@@ -73,7 +74,16 @@ run: build/usb.img
 	-vga std \
 	-serial stdio \
 	-monitor vc \
-
+ 
+debug: build/usb.img
+	qemu-system-x86_64 \
+	-drive if=pflash,format=raw,readonly=on,file=$(OVMF) \
+	-drive format=raw,file=$< \
+	-m 512M \
+	-vga std \
+	-serial stdio \
+	-monitor vc \
+	-s -S
 clean:
 	rm -rf build/
 
