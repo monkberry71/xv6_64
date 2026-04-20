@@ -2,6 +2,7 @@
 #include "mmu.h"
 #include "memlayout.h"
 #include "string.h"
+#include "debug.h"
 
 // bump, only use before kalloc
 static uint64_t bump_ptr;
@@ -16,7 +17,9 @@ void bump_init(void) {
 
 void* bump_alloc_page_4kb(void) {
     // it returns the kernel mapping virtual address
-    if(!bump_enable) return 0;
+    if(!bump_enable) {
+        panic("Bad bump usage");
+    }
     uint64_t p = bump_ptr;
     bump_ptr += PGSIZE_4KB;
     memset((void*)P2V_KERN(p), 0, PGSIZE_4KB);

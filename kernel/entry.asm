@@ -52,6 +52,7 @@ use32
     ; enable PAE, which makes 64bit addr possible
     mov eax, cr4
     or eax, 1 shl 5; 5th bit is PAE;
+    or eax, 1 shl 7; PGE
     mov cr4, eax
 
     ; cr3 reg holds the pml4 addr, it needs to be physical addr tho.
