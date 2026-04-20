@@ -6,7 +6,7 @@ section '.multiboot2' align 8
 MB2_MAGIC = 0xE85250D6
 MB2_ARCH = 0
 
-macro GDT_desc limit, base, access, flags {
+macro seg_desc limit, base, access, flags {
     dw limit
     dw base and 0xFFFF
     db (base shr 16) and 0xFF
@@ -110,10 +110,13 @@ gdt:
     ; db 0x92 ;1001 0010, present=1, DPL=0, S=1, Type=(data, readable, writable)
     ; db 0xAF
     ; db 0x00;
-    GDT_desc 0xFFFF, 0x000000, 0x9A, 0xAF
+    seg_desc 0xFFFF, 0x000000, 0x9A, 0xAF
     ; access 0x9A == 1001 1010, Present=1, DPL=00, S=1, Type (code, exec, read)
-    ; flags 0xAF == 1010, G=1, D=0, Longmode=1, AVL(Reservedo)=0
-    GDT_desc 0xFFFF, 0x000000, 0x92, 0xAF
+    ; flags 0xAF == 1010 1111, G=1, D=0, Longmode=1, AVL(Reservedo)=0
+    seg_desc 0xFFFF, 0x000000, 0x92, 0xCF
+    ; my book sets the code segment flag as AF, but it needs to be CF
+    ; https://wiki.osdev.org/Setting_Up_Long_Mode
+    ; flags 0xCF == 1100 1111 G=1, D=1, L=0 (D=1 makes it 0), AVL=0
     ; access 0x92 == 1001 0010, Present=1, DPL=00, S=1, Type (data, r/w)
 gdt_end:
 

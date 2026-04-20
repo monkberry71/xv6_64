@@ -5,19 +5,50 @@
 #include "bump.h"
 #include "debug.h"
 #include "x86_64.h"
-#include "vm.h"
+#include "cpu.h"
+#include "params.h"
 
 static pde_t *kpml4 = 0;
 
-// plan : 
+char __attribute__((aligned(16))) ist0[KSTACKSIZE];
 
-// make a walkpml4 func
-// make a mappage func
+static void set_tss_desc(uint64_t *gdt_slot, void* tss_base, uint32_t limit, char flags, char access) {
+    uint64_t base = (uint64_t) tss_base;
+    uint64_t low = 0, high = 0;
+    low |= (uint64_t)(limit & 0xFFFF); // limit[15:0] byte2
+    low |= (base & 0xFFFFFF) << 16; // base [15:0] byte5
+    low |= ((uint64_t)access << 40); // access byte6
+    low |= (uint64_t)((limit >> 16) & 0xF) << 48; // limit[19:16]
+    low |= (uint64_t)(flags & 0xF) << 52; // flags[3:0] 
+    low |= (uint64_t)((base >> 24) & 0xFF) << 56; // base[31:24]
 
+    high |= (base >> 32) & 0xFFFFFFFFULL; // base[63:32]
 
-// make a direct mapping 
-// make a kmalloc
-// make a kinit
+    gdt_slot[0] = low;
+    gdt_slot[1] = high;
+}
+
+void seg_init(void) {
+    struct cpu* c;
+    c = mycpu(); // ok why xv6 derefs the cpus array?
+    c->gdt[SEG_KCODE] = LONG_MODE_SEG_DESC(0x9A, 0xAF);
+    c->gdt[SEG_KDATA] = LONG_MODE_SEG_DESC(0x92, 0xCF);
+    c->gdt[SEG_UDATA32] = LONG_MODE_SEG_DESC(0,0);
+    c->gdt[SEG_UDATA] = LONG_MODE_SEG_DESC(0xF2, 0xCF);
+    c->gdt[SEG_UCODE] = LONG_MODE_SEG_DESC(0xFA, 0xAF);
+    
+    // we need a IST for a double fault
+    memset(&c->ts, 0, sizeof(c->ts)); // TSS itself is per cpu
+    c->ts.ist[0] = (uint64_t)(ist0 + sizeof(ist0));
+    c->ts.iopb = sizeof(c->ts); // 
+
+    set_tss_desc(&c->gdt[SEG_TSS], &c->ts, sizeof(c->ts) - 1, 0, 0x89);
+
+    // kcode and kdata have same indices as before, no need to reload segment selector
+
+    wgdt(c->gdt, sizeof(c->gdt));
+    wtr(SEG_TSS << 3);
+}
 
 pde_t* setup_kvm(void) {
     pde_t* pml4;
