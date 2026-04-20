@@ -1,5 +1,8 @@
 #include <stdint.h>
+#define MB2_TAG_MMAP 6
+#define MB2_MMAP_AVAIL 1
 
+// https://www.gnu.org/software/grub/manual/multiboot2/html_node/Boot-information-format.html
 
 struct mb2_tag {
     uint32_t type;
@@ -22,12 +25,20 @@ struct mb2_tag_fb {
     uint8_t  fb_type;
     uint16_t reserved;
 };
+struct mb2_mmap_entry {
+    uint64_t base_addr;
+    uint64_t length;
+    uint32_t type;
+    uint32_t reserved;
+};
 
 struct mb2_tag_mm {
     struct mb2_tag tag;
     uint32_t entry_size;
     uint32_t entry_version;
+    struct mb2_mmap_entry entries[];
 };
+
 
 #define MB2_FOREACH_TAG(mb2_phys, tag) \
     for ( \

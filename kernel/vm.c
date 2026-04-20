@@ -9,19 +9,6 @@
 
 static pde_t *kpml4 = 0;
 
-// static int mappages(pde_t *pml4, void *va, uint64_t size, uint64_t pa, uint64_t perm, uint64_t pg_size) {
-//     char *a, *last;
-//     pde_t *pml4;
-//     if(pg_size != PGSIZE_4KB && pg_size != PGSIZE_2MB && pg_size != PGSIZE_1GB) return -1;
-
-//     a = (char*)ROUNDDOWN((uint64_t) va, pg_size);
-//     last = (char*)ROUNDUP((uint64_t) va + size - 1, pg_size);
-//     for(;;) {
-        
-//     }
-
-// }
-
 // plan : 
 
 // make a walkpml4 func
@@ -37,8 +24,6 @@ pde_t* setup_kvm(void) {
     
     pml4 = (pde_t*) bump_alloc_page_4kb();
     if(pml4 == 0) return 0;
-
-    // memset(pml4, 0, PGSIZE_4KB);
 
     // direct mapping
     direct_map_init(pml4);

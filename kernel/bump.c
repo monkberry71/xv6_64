@@ -25,3 +25,12 @@ void* bump_alloc_page_4kb(void) {
     memset((void*)P2V_KERN(p), 0, PGSIZE_4KB);
     return (void*)P2V_KERN(p);
 }
+
+uint64_t p_bump_end(void) {
+    // returns phy addr 
+    return bump_ptr;
+}
+
+void bump_off(void) {
+    bump_enable = 0;
+}
