@@ -7,6 +7,7 @@
 #include "x86_64.h"
 #include "cpu.h"
 #include "params.h"
+#include "string.h"
 
 static pde_t *kpml4 = 0;
 

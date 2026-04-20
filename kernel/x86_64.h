@@ -5,7 +5,7 @@ static inline void wcr3(uint64_t val) {
     __asm__ volatile("movq %0,%%cr3" : : "r" (val));
 }
 
-static inline void wgdt(struct segdesc *p, uint64_t size) {
+static inline void wgdt(void *p, uint64_t size) {
     volatile struct {
         uint16_t limit;
         uint64_t base;
