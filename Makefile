@@ -16,7 +16,7 @@ LDFLAGS = -m elf_x86_64 \
 -T kernel/linker.ld
 
 OBJS = build/main.o build/entry.o build/uart.o build/string.o build/bump.o build/mb2.o \
-build/debug.o build/vm.o build/kalloc.o build/mp.o
+build/debug.o build/vm.o build/kalloc.o build/mp.o build/vectors.o build/trap_asm.o build/trap.o
 GRUB_MODULES = part_gpt fat normal multiboot2 all_video
 
 .PHONY: run clean debug format_usb format_esp
@@ -82,11 +82,14 @@ debug: format_usb
 	qemu-system-x86_64 \
 	-drive if=pflash,format=raw,readonly=on,file=$(OVMF) \
 	-drive format=raw,file=build/usb.img \
-	-m 512M \
+	-m 128M \
 	-vga std \
 	-serial stdio \
 	-monitor vc \
-	-s -S
+	-s -S \
+	-no-reboot \
+	-d int,cpu_reset -D ./misc/qemu.log \
+	-accel tcg
 clean:
 	rm -rf build/
 

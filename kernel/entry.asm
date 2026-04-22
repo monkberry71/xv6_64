@@ -1,11 +1,6 @@
 format elf64
 
 KERN_BASE = 0xFFFFFFFF80000000
-
-section '.multiboot2' align 8
-MB2_MAGIC = 0xE85250D6
-MB2_ARCH = 0
-
 macro seg_desc limit, base, access, flags {
     dw limit
     dw base and 0xFFFF
@@ -14,6 +9,9 @@ macro seg_desc limit, base, access, flags {
     db flags
     db (base shr 24) and 0xFF
 }
+MB2_MAGIC = 0xE85250D6
+MB2_ARCH = 0
+
 
 PDE_P = 1 shl 0 ; present
 PDE_RW = 1 shl 1 ; writable
@@ -27,6 +25,8 @@ PDE_XD = 1 shl 63; no exe
 macro pde_t addr, flags {
     dq addr + flags
 }
+
+section '.multiboot2' align 8
 
 mb2_header:
     dd MB2_MAGIC ; magic num

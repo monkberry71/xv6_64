@@ -13,7 +13,7 @@ static pde_t *kpml4 = 0;
 
 char __attribute__((aligned(16))) ist0[KSTACKSIZE];
 
-static void set_tss_desc(uint64_t *gdt_slot, void* tss_base, uint32_t limit, char flags, char access) {
+static void set_tss_desc(uint64_t *gdt_slot, void* tss_base, uint32_t limit, uint8_t flags, uint8_t access) {
     uint64_t base = (uint64_t) tss_base;
     uint64_t low = 0, high = 0;
     low |= (uint64_t)(limit & 0xFFFF); // limit[15:0] byte2

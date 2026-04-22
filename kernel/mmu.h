@@ -33,3 +33,27 @@
 #define PTE_XD (1ULL << 63)
 
 #define K_FLAGS (PTE_P | PTE_G | PTE_W)
+
+struct gate_desc {
+    uint16_t off_15_0;
+    uint16_t cs;
+    uint8_t ist;
+    uint8_t type;
+    uint16_t off_mid;
+    uint32_t off_hi;
+    uint32_t reserved;
+} __attribute__((packed));
+
+#define IDT_TYPE_INT 0x0e
+#define IDT_TYPE_TRAP 0x0f
+
+#define SETGATE(gate, istrap, m_ist, sel, off, dpl) \
+{\
+    (gate).off_15_0 = (uint64_t)(off) & 0xFFFF; \
+    (gate).cs = (uint16_t)(sel); \
+    (gate).ist = (uint8_t)(m_ist); \
+    (gate).type = 0x80 | ((dpl) << 5) | ((istrap) ? 0xF : 0xE); \
+    (gate).off_mid = ((uint64_t)(off) >> 16) & 0xFFFF; \
+    (gate).off_hi = ((uint64_t)(off)>> 32) & 0xFFFFFFFF; \
+    (gate).reserved = 0; \
+}

@@ -8,6 +8,11 @@
 #include "vm.h"
 #include "kalloc.h"
 #include "debug.h"
+#include "trap.h"
+
+void stof() {
+    stof();
+}
 
 extern struct mb2_info* reserved_mb2_info;
 
@@ -26,10 +31,15 @@ int main(uint32_t mb2_info_phys) {
     kinit();
     serial_puts("done\n");
     seg_init();
+    tv_init();
+    idt_init();
+    // __asm__ volatile("ud2");
+    // __asm__ volatile("mov $0x8000, %%rsp\n\tud2" ::: "memory");
 
+    stof();
     // seg _init test
-    char buf[10] = {'D','E','A','D','B','E','A','F','\n', 0};
-    serial_puts(buf);
+    // char buf[10] = {'D','E','A','D','B','E','A','F','\n', 0};
+    // serial_puts(buf);
 
     serial_puts("Bye\n");
     for(;;);
