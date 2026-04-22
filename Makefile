@@ -16,7 +16,8 @@ LDFLAGS = -m elf_x86_64 \
 -T kernel/linker.ld
 
 OBJS = build/main.o build/entry.o build/uart.o build/string.o build/bump.o build/mb2.o \
-build/debug.o build/vm.o build/kalloc.o build/mp.o build/vectors.o build/trap_asm.o build/trap.o
+build/debug.o build/vm.o build/kalloc.o build/mp.o build/vectors.o build/trap_asm.o build/trap.o \
+build/gop.o
 GRUB_MODULES = part_gpt fat normal multiboot2 all_video
 
 .PHONY: run clean debug format_usb format_esp
