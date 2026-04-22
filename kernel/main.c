@@ -10,11 +10,11 @@
 #include "debug.h"
 #include "trap.h"
 
-void stof() {
-    stof();
-}
+// void stof() {
+//     stof();
+// }
 
-extern struct mb2_info* reserved_mb2_info;
+// extern struct mb2_info* reserved_mb2_info;
 
 int main(uint32_t mb2_info_phys) {
     // uint32_t* test_writing_point = KERN_BASE + 8;
@@ -33,10 +33,14 @@ int main(uint32_t mb2_info_phys) {
     seg_init();
     tv_init();
     idt_init();
+
+    uint32_t *test = io_remap(0x8, 16);
+    *test = 0xDEADBEEF;
+    
     // __asm__ volatile("ud2");
     // __asm__ volatile("mov $0x8000, %%rsp\n\tud2" ::: "memory");
 
-    stof();
+    // stof();
     // seg _init test
     // char buf[10] = {'D','E','A','D','B','E','A','F','\n', 0};
     // serial_puts(buf);

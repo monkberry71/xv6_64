@@ -58,6 +58,7 @@ format_esp: build/esp.img build/BOOTX64.EFI build/kernel.elf
 	mcopy -i build/esp.img build/kernel.elf ::/boot/
 
 build/usb.img:
+	@mkdir -p build
 	# create raw image
 	dd if=/dev/zero of=$@ bs=1M count=128
 

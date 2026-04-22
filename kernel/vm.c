@@ -8,8 +8,9 @@
 #include "cpu.h"
 #include "params.h"
 #include "string.h"
+#include "kalloc.h"
 
-static pde_t *kpml4 = 0;
+static pte_t *kpml4 = 0;
 
 char __attribute__((aligned(16))) ist0[KSTACKSIZE];
 
@@ -51,10 +52,10 @@ void seg_init(void) {
     wtr(SEG_TSS << 3);
 }
 
-pde_t* setup_kvm(void) {
-    pde_t* pml4;
+pte_t* setup_kvm(void) {
+    pte_t* pml4;
     
-    pml4 = (pde_t*) bump_alloc_page_4kb();
+    pml4 = (pte_t*) bump_alloc_page_4kb();
     if(pml4 == 0) return 0;
 
     // direct mapping
@@ -72,35 +73,116 @@ void kvmalloc(void) {
     switch_kvm();
 }
 
+static pte_t *walk_pml4(pte_t *pml4, const void *va, int alloc) {
+    // bit offset 
+    // PT 12~21; >> 12
+    // PD 21~30; >> 21
+    // PDPT 30~39; >> 30
+    // PML4 39~48; >> 39
+    // 39 30 21 12
+    // 
+    pte_t *entry_tables = pml4;
+    for(int i=0; i<4; i++) {
+        int shift = 39 - i * 9;
+        pte_t *entry_pointer = &entry_tables[((uint64_t)va >> shift) & 0x1FF];
+        if(i == 3) {
+            // ok, now the *entry itself is on the last level, we must return it or 0
+            // return (!alloc && *entry_pointer & PTE_P) ? entry_pointer : 0;
+            if(alloc) {
+                return entry_pointer;
+            }
+            return (*entry_pointer & PTE_P) ? entry_pointer : 0;
+        }
+        if(*entry_pointer & PTE_P) {
+            if(*entry_pointer & PTE_PS) {
+                return entry_pointer;
+            }
+            // no ps -> next level
+            entry_tables = P2V((uint64_t)(*entry_pointer) & ~0xFFFULL); 
+            // *entry_p will always have a physical addr.
+            continue;
+        }
+        
+        // no present bit? allocate or return 0
+        if(!alloc || (entry_tables = (pte_t*) kalloc()) == 0) {
+            return 0;
+        }
+        memset(entry_tables, 0, PGSIZE_4KB);
+        *entry_pointer = V2P(entry_tables) | PTE_P | PTE_W | PTE_U;
+        // entry_tables is always direct mapping, since it came from kalloc
+    }
+    return 0; // non-reachable
+}
 
-static void direct_map_init(pde_t* pml4) {
+static int map_pages(pte_t *pml4, void *va, uint64_t size, uint64_t pa, uint64_t perm) {
+
+    // pa must be aligned
+
+    uint64_t large_start, end;
+    // large_start --- va --- end --- va+size-1 --- end + 4096
+    // large_start <= va <= end <= va+size-1 < end + 4096
+
+    large_start = ROUNDDOWN((uint64_t)va, PGSIZE_4KB);
+    end = ROUNDDOWN((uint64_t)va + size - 1, PGSIZE_4KB);
+
+    for(uint64_t it = large_start;; it += PGSIZE_4KB, pa += PGSIZE_4KB) {
+        pte_t *pte_for_curr = walk_pml4(pml4, (void*)it ,1);
+        if(pte_for_curr == 0) return -1;
+
+        if(*pte_for_curr & PTE_P) {
+            panic("remap");
+        }
+
+        *pte_for_curr = pa | perm | PTE_P;
+
+        if (it == end) break; // break early for preventing overflow
+    }
+    return 0;
+}
+
+static uint64_t io_bump = IOREMAP_BASE;
+void* io_remap(void* pa, uint64_t size) {
+    uint64_t va_start = io_bump;
+    uint64_t pa_offset = (uint64_t) pa & 0xFFF;
+    uint64_t pa_paging_idx = ROUNDDOWN((uint64_t)pa, PGSIZE_4KB);
+
+    map_pages(kpml4, (void*)io_bump, size, pa_paging_idx, PTE_PCD | PTE_W);
+
+    uint64_t end = ROUNDDOWN((uint64_t)io_bump + size -1, PGSIZE_4KB);
+    io_bump = end + PGSIZE_4KB;
+    return (void*)(va_start + pa_offset);
+
+}
+
+
+static void direct_map_init(pte_t* pml4) {
     if(pml4[PML4_IDX(PAGE_OFFSET)] != 0) {
         // why isn't it 0?
         panic("direct mapping init failed");
     }
-    pde_t *pdpt = bump_alloc_page_4kb();
+    pte_t *pdpt = bump_alloc_page_4kb();
     pml4[PML4_IDX(PAGE_OFFSET)] =  V2P_KERN(pdpt) | K_FLAGS;
     // bump alloc's addrs are on the kernel mapping, so we need to use V2P_KERN
     
     // I think max ram 128G is enough...
     for(int i=0; i<128; i++) {
         uint64_t phy_addr = i * PGSIZE_1GB;
-        pde_t pdpt_entry = phy_addr | PTE_PS | K_FLAGS;
+        pte_t pdpt_entry = phy_addr | PTE_PS | K_FLAGS;
         pdpt[PDPT_IDX(PAGE_OFFSET) + i] = pdpt_entry;
     }
 }
 
-static void kernel_map_init(pde_t *pml4) {
+static void kernel_map_init(pte_t *pml4) {
     if(pml4[PML4_IDX(KERN_BASE)] != 0) {
         //why isn't it 0?
         panic("kernel mapping init failed");
     }
-    pde_t *pdpt = bump_alloc_page_4kb();
+    pte_t *pdpt = bump_alloc_page_4kb();
     pml4[PML4_IDX(KERN_BASE)] = V2P_KERN(pdpt) | K_FLAGS;
 
     for(int i=0; i<2; i++) {
         uint64_t phy_addr = i * PGSIZE_1GB;
-        pde_t pdpt_entry = phy_addr | PTE_PS | K_FLAGS;
+        pte_t pdpt_entry = phy_addr | PTE_PS | K_FLAGS;
         pdpt[PDPT_IDX(KERN_BASE) + i] = pdpt_entry;
     }
 

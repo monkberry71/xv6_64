@@ -1,5 +1,6 @@
 #include <stdint.h>
 #define MB2_TAG_MMAP 6
+#define MB2_TAG_FB 8
 #define MB2_MMAP_AVAIL 1
 
 // https://www.gnu.org/software/grub/manual/multiboot2/html_node/Boot-information-format.html
