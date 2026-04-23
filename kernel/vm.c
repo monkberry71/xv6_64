@@ -146,7 +146,10 @@ void* io_remap(void* pa, uint64_t size) {
     uint64_t pa_offset = (uint64_t) pa & 0xFFF;
     uint64_t pa_paging_idx = ROUNDDOWN((uint64_t)pa, PGSIZE_4KB);
 
-    map_pages(kpml4, (void*)io_bump, size, pa_paging_idx, PTE_PCD | PTE_W);
+    int res = map_pages(kpml4, (void*)io_bump, size, pa_paging_idx, PTE_PCD | PTE_W);
+    if(res != 0) {
+        panic("io_remap failed by map_pages failure");
+    }
 
     uint64_t end = ROUNDDOWN((uint64_t)io_bump + size -1, PGSIZE_4KB);
     io_bump = end + PGSIZE_4KB;

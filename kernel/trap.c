@@ -4,6 +4,8 @@
 #include "x86_64.h"
 #include "debug.h"
 #include "driver/uart.h"
+#include "trap.h"
+#include "lapic.h"
 
 struct gate_desc idt[256];
 extern uint64_t vectors[256];
@@ -21,7 +23,13 @@ void idt_init(void) {
 }
 
 void trap(struct trap_frame *tf) {
-    if(tf->trap_no == 8) {
+    serial_hex(tf->trap_no);
+    if(tf->trap_no == T_IRQ0 + IRQ_TIMER) {
+
+        lapic_eoi();
+        return;
+    }
+    if(tf->trap_no == T_DBLFLT) {
         panic("DF DF DF");
     }
 }

@@ -10,6 +10,7 @@
 #include "debug.h"
 #include "trap.h"
 #include "gop.h"
+#include "lapic.h"
 
 // void stof() {
 //     stof();
@@ -38,6 +39,8 @@ int main(uint32_t mb2_info_phys) {
     gop_draw_rect(0, 0, 100, 100, GOP_RED);   // red square
     gop_draw_rect(100, 0, 100, 100, GOP_GRN); // green square
     gop_draw_rect(200, 0, 100, 100, GOP_BLU); // blue square
+    __asm__ volatile("sti");
+    lapic_init();
 
     // uint32_t *test = io_remap(0x8, 16);
     // *test = 0xDEADBEEF;

@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "mb2.h"
 #include "vm.h"
+#include "debug.h"
 
 extern struct mb2_info* reserved_mb2_info;
 struct {
@@ -17,7 +18,7 @@ void gop_init(void) {
         if(tag->type != MB2_TAG_FB) continue;
         found = 1;
 
-        struct mb2_tag_fb *fb_info = tag;
+        struct mb2_tag_fb *fb_info = (void*)tag;
         
         if(fb_info->fb_type != 1) {
             panic("unsupported fb type");
