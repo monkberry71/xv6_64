@@ -17,7 +17,7 @@ LDFLAGS = -m elf_x86_64 \
 
 OBJS = build/main.o build/entry.o build/uart.o build/string.o build/bump.o build/mb2.o \
 build/debug.o build/vm.o build/kalloc.o build/mp.o build/vectors.o build/trap_asm.o build/trap.o \
-build/gop.o build/lapic.o
+build/gop.o build/lapic.o build/swtch.o build/spinlock.o build/proc.o
 GRUB_MODULES = part_gpt fat normal multiboot2 all_video
 
 .PHONY: run clean debug format_usb format_esp
@@ -78,6 +78,7 @@ run: format_usb
 	-m 512M \
 	-vga std \
 	-serial stdio \
+	-d int,cpu_reset -D ./misc/qemu.log \
 	-monitor vc \
 
 debug: format_usb

@@ -1,3 +1,4 @@
+#pragma once
 #include <stdint.h>
 
 static inline void wcr3(uint64_t val) {
@@ -37,6 +38,20 @@ static inline void wrmsr(uint32_t msr, uint64_t val) {
     __asm__ volatile("wrmsr" :: "c"(msr), "a"((uint32_t)val), "d"((uint32_t)(val >> 32)));
 }
 
+static inline uint64_t read_rflags(void) {
+    uint64_t rflags;
+    __asm__ volatile("pushfq; popq %0" : "=r"(rflags));
+    return rflags;
+}
+
+static inline void cli(void) {
+    __asm__ volatile("cli");
+}
+
+static inline void sti(void) {
+    __asm__ volatile("sti");
+}
+
 struct trap_frame {
     uint64_t r15;
     uint64_t r14;
@@ -57,6 +72,7 @@ struct trap_frame {
     uint64_t trap_no;
     uint64_t err;
     
+    uint64_t rip;
     uint64_t cs;
     uint64_t rflags;
     uint64_t rsp;

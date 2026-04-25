@@ -2,6 +2,7 @@
 #include "mb2.h"
 #include "vm.h"
 #include "debug.h"
+#include "spinlock.h"
 
 extern struct mb2_info* reserved_mb2_info;
 struct {
@@ -48,9 +49,13 @@ void gop_draw_pixel(uint32_t x, uint32_t y, uint32_t color) {
 }
 
 void gop_draw_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color) {
-    for(uint32_t row = y; row < y + h; row++)
-        for(uint32_t col = x; col < x + w; col++)
+    // push_cli();
+    uint32_t x_end = x + w > gop_fb.width ? gop_fb.width : x + w;
+    uint32_t y_end = y + h > gop_fb.height ? gop_fb.height : y + h;
+    for(uint32_t row = y; row < y_end; row++)
+        for(uint32_t col = x; col < x_end; col++)
             gop_draw_pixel(col, row, color);
+    // pop_cli();
 }
 
 // extern struct mb2_info* reserved_mb2_info;
