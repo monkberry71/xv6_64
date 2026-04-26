@@ -52,6 +52,19 @@ static inline void sti(void) {
     __asm__ volatile("sti");
 }
 
+static inline uint64_t xchg(volatile uint64_t *addr, uint64_t new_val) {
+    // read of *addr should not be optimized, it must read from memory all the time
+    uint64_t res;
+
+    __asm__ volatile(\
+        "lock; xchgq %0, %1": // lock makes the next instruction 
+        "+m"(*addr), "=a"(res) :
+        "1"(new_val) :
+        "cc"
+    );
+    return res;
+}
+
 struct trap_frame {
     uint64_t r15;
     uint64_t r14;

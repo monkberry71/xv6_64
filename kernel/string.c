@@ -6,7 +6,7 @@ void* memset(void* dst, int c, uint64_t n) {
     return dst;
 }
 
-void *memcpy(void *dst, const void *src, uint64_t n) {
+void *memcpy(void *dst, void *src, uint64_t n) {
     char *d = dst, *s = src;
     while (n--) *d++ = *s++;
     return dst;

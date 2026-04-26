@@ -17,8 +17,8 @@ struct run {
 void kfree(char* v) {
     // v must be direct mapping
     struct run *r;
-    uint64_t dmap_bump_end = P2V(p_bump_end());
-    if((uint64_t)v % PGSIZE_4KB || v < dmap_bump_end || V2P(v) >= PHY_STOP) {
+    uint64_t dmap_bump_end = (uint64_t) P2V(p_bump_end());
+    if((uint64_t)v % PGSIZE_4KB || (uint64_t) v < dmap_bump_end || V2P(v) >= PHY_STOP) {
         panic("kfree frees wrong addr");
     }
     memset(v, 1, PGSIZE_4KB);
@@ -49,7 +49,7 @@ void kinit(void) {
     MB2_FOREACH_TAG(reserved_mb2_info, tag) {
         if(tag->type != MB2_TAG_MMAP) continue;
         
-        struct mb2_tag_mm *mm_tag = tag;
+        struct mb2_tag_mm *mm_tag = (void*)tag;
         uint64_t entry_length = (mm_tag->tag.size - sizeof(struct mb2_tag_mm)) / mm_tag->entry_size;
         for(uint64_t i=0; i<entry_length; i++) {
             struct mb2_mmap_entry *e = (struct mb2_mmap_entry*)((char*)mm_tag->entries + i * mm_tag->entry_size);

@@ -33,3 +33,7 @@ struct proc {
 void swtch(struct context* *old, struct context *new_p);
 struct proc* myproc(void);
 void kthread_init(void* thread_func);
+void process_init(void);
+void scheduler(void);
+void yield(void);
+void sched(void);

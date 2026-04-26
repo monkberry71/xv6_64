@@ -5,8 +5,10 @@
 #include "string.h"
 #include "mmu.h"
 #include "kalloc.h"
+#include "debug.h"
 
 struct {
+    struct spin_lock lock;
     struct proc procs[NPROC];
 } ptable;
 
@@ -20,11 +22,19 @@ struct proc* myproc(void) {
     c = mycpu();
     p = c->proc;
     pop_cli();
+    return p;
+}
+
+void process_init(void) {
+    init_lock(&ptable.lock, "ptable");
 }
 
 void fork_ret(void) {
     // -------{context rip=fork_ret} trap_ret ------ trap_frame ---- stack_bottom
     static int first = 1;
+
+    // ptable lock from the scheduler
+    release(&ptable.lock);
     if (first) {
         first = 0;
         // init some
@@ -46,13 +56,15 @@ void fork_ret(void) {
 // &function_name == function_name in c
 void trap_ret(void);
 struct proc* alloc_proc(void) {
+
+    acquire(&ptable.lock);
     for(int i=0; i<NPROC; i++) {
         struct proc *p = &ptable.procs[i];
         if(p->state == UNUSED) {
             p->state = EMBRYO;
             p->pid = next_pid++;
 
-            // release lock
+            release(&ptable.lock);
 
             void* new_stack = kalloc();
             if(!new_stack) {
@@ -67,6 +79,7 @@ struct proc* alloc_proc(void) {
             p->tf = (void*) sp;
             // ------_>
             // ------------ trap_frame --- stack_bottom
+            //              ^sp
 
             sp -= 8;
             *(uint64_t *) sp = (uint64_t) trap_ret;
@@ -84,6 +97,8 @@ struct proc* alloc_proc(void) {
 
         }
     }
+    release(&ptable.lock);
+    return 0; // failed
 }
 
 void kthread_init(void* thread_func) {
@@ -93,8 +108,90 @@ void kthread_init(void* thread_func) {
     p->tf->cs = (SEG_KCODE << 3);
     p->tf->ss = (SEG_KDATA << 3);
     p->tf->rflags = FL_IF;
-    p->tf->rsp = p->kstack + KSTACKSIZE;
-    p->tf->rip = thread_func;
+    p->tf->rsp = (uint64_t)(p->kstack + KSTACKSIZE);
+    p->tf->rip = (uint64_t)thread_func;
 
+    acquire(&ptable.lock);
     p->state = RUNNABLE;
+    release(&ptable.lock);
+}
+
+void scheduler(void) {
+    struct cpu *c = mycpu();
+    c->proc = 0;
+
+    for(;;) {
+        // enable int
+        sti();
+
+        acquire(&ptable.lock);
+        for(int i=0; i<NPROC; i++) {
+            struct proc *p = &ptable.procs[i];
+            if(p->state != RUNNABLE) continue;
+
+            c->proc = p;
+            // switch uvm
+            p->state = RUNNING;
+
+            swtch(&(c->scheduler), p->context);
+            // switch_kvm(); 
+            // we don't switch to kvm, because all threads all kthread now
+            c->proc = 0;
+        }
+        release(&ptable.lock);
+
+    }
+}
+
+void sched(void) {
+    struct proc *p = myproc();
+
+    // checks :
+    // A process that wants give up the CPU must:
+    // 1. acquire process table lock
+    // 2. release any other lock it is holding
+    // 3. update its own state
+    // 4. then call sched
+
+    if(!holding(&ptable.lock)) {
+        // 1. acquire process table lock
+        panic("sched ptable.lock not holded");
+    }
+    
+    if(mycpu()->ncli != 1) {
+        // 2. release any other lock it is holding
+        // push_cli is called in only 3 places
+        // #1 myproc #2 switchuvm #3 spinlock #3.1 spinlock holding check
+        // #1, #2, #3.1 would not call yield while interrupt diabled,
+        // thus ncli == nlock
+        panic("sched locks");
+    }
+
+    if(p->state == RUNNING) {
+        // 3. update its own state
+        panic("sched running");
+    }
+
+    if(read_rflags() & FL_IF) {
+        // + since a lock is held, the interrupt must be disabled 
+        // strictly
+        panic("sched interruptible");
+    }
+
+
+    // need to store int_ena, because it is a property of a kthread.
+    // proc->int_ena and proc->ncli would be appropriate, but 
+    // that would break in the few places, when a lk is held but it is a pure kthread, not process
+
+    int int_ena = mycpu()->int_ena;
+    swtch(&p->context, mycpu()->scheduler);
+    mycpu()->int_ena = int_ena;
+    
+}
+
+void yield(void) {
+    acquire(&ptable.lock); // 1.
+    myproc()->state = RUNNABLE;
+    sched();
+    release(&ptable.lock);
 }
