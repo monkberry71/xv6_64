@@ -124,6 +124,9 @@ static int map_pages(pte_t *pml4, void *va, uint64_t size, uint64_t pa, uint64_t
 
     large_start = ROUNDDOWN((uint64_t)va, PGSIZE_4KB);
     end = ROUNDDOWN((uint64_t)va + size - 1, PGSIZE_4KB);
+    // end must be the last page's starting point
+    // so if va + size is already aligned, end will be next
+    // page's starting addr, which is redundant
 
     for(uint64_t it = large_start;; it += PGSIZE_4KB, pa += PGSIZE_4KB) {
         pte_t *pte_for_curr = walk_pml4(pml4, (void*)it ,1);
