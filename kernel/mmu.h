@@ -50,6 +50,8 @@ struct gate_desc {
 #define IDT_TYPE_INT 0x0e
 #define IDT_TYPE_TRAP 0x0f
 
+#define DPL_USER 0x3;
+
 #define SETGATE(gate, istrap, m_ist, sel, off, dpl) \
 {\
     (gate).off_15_0 = (uint64_t)(off) & 0xFFFF; \

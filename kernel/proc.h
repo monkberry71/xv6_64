@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 #include "vm.h"
 #include "x86_64.h"

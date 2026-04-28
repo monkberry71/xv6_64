@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 #define GOP_RED 0x00FF0000
 #define GOP_GRN 0x0000FF00

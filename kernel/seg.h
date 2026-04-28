@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 #define SEG_KCODE 1
 #define SEG_KDATA 2 

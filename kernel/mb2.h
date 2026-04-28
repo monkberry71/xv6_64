@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 #define MB2_TAG_MMAP 6
 #define MB2_TAG_FB 8
