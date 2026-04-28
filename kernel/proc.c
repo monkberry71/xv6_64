@@ -116,6 +116,35 @@ void kthread_init(void* thread_func) {
     release(&ptable.lock);
 }
 
+static struct proc *init_proc;
+void user_init(void) {
+    extern char _binary_build_user_initcode_start[], _binary_build_user_initcode_size[];
+    struct proc *p = alloc_proc();
+
+    init_proc = p;
+    p->pml4 = setup_uvm();
+    if(p->pml4 == 0) {
+        panic("user_init: setup_uvm failed");
+    }
+    init_uvm(p->pml4, _binary_build_user_initcode_start, (uint64_t) _binary_build_user_initcode_size);
+    p->sz = PGSIZE_4KB;
+    memset(p->tf, 0, sizeof(struct trap_frame));
+    p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
+    p->tf->ss = (SEG_UDATA << 3) | DPL_USER;
+    p->tf->rflags = FL_IF;
+    p->tf->rsp = (uint64_t) PGSIZE_4KB;
+    p->tf->rip = 0; // initcode.asm begins
+
+    safe_strcpy(p->name, "initcode", sizeof(p->name));
+    // p->cwd
+
+    // acquire forces above writes to be visible (sync_synchronize)
+    // and assignment has to be atomic
+    acquire(&ptable.lock);
+    p->state = RUNNABLE;
+    release(&ptable.lock);
+}
+
 void scheduler(void) {
     struct cpu *c = mycpu();
     c->proc = 0;
@@ -130,11 +159,11 @@ void scheduler(void) {
             if(p->state != RUNNABLE) continue;
 
             c->proc = p;
-            // switch uvm
+            switch_uvm(p);
             p->state = RUNNING;
 
             swtch(&(c->scheduler), p->context);
-            // switch_kvm(); 
+            switch_kvm(); 
             // we don't switch to kvm, because all threads all kthread now
             c->proc = 0;
         }

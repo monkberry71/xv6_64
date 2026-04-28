@@ -39,3 +39,4 @@ void process_init(void);
 void scheduler(void);
 void yield(void);
 void sched(void);
+void user_init(void);

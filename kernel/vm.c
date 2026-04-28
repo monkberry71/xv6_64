@@ -9,7 +9,9 @@
 #include "params.h"
 #include "string.h"
 #include "kalloc.h"
-
+#include "spinlock.h"
+#include "x86_64.h"
+static int map_pages(pte_t *pml4, void *va, uint64_t size, uint64_t pa, uint64_t perm);
 static pte_t *kpml4 = 0;
 
 char __attribute__((aligned(16))) ist0[KSTACKSIZE];
@@ -64,8 +66,54 @@ pte_t* setup_kvm(void) {
     return pml4;
 }
 
+// xv6 uses setup_kvm for #1. kpgdir init #2. user process vm init
+// we need to separate it to two funcs because 1. We can't use bump alloc after kpml4 init 
+// 2. we need to copy from kpml4, not making new direct and kernel mapping.
+pte_t* setup_uvm(void) {
+    pte_t* pml4;
+
+    pml4 = (pte_t*) kalloc();
+    if(pml4 == 0) return 0;
+    memset(pml4, 0, PGSIZE_4KB); // kalloc doesnt 0-filled page.
+
+    for(int i = 256; i < 512; i++) {
+        pml4[i] = kpml4[i];
+    }
+
+    return pml4;
+}
+
+// Load the code into address 0 of pml4
+void init_uvm(pte_t *pml4, char *init, uint64_t sz) {
+    if(sz >= PGSIZE_4KB) {
+        panic("init is too big");
+    }
+
+    char *mem = kalloc();
+    memset(mem, 0, PGSIZE_4KB);
+    map_pages(pml4, 0, PGSIZE_4KB, V2P(mem), PTE_W | PTE_U);
+    memcpy(mem, init, sz);
+}
+
 void switch_kvm(void) {
     wcr3(V2P_KERN(kpml4));
+}
+
+void switch_uvm(struct proc *p) {
+    if(p == 0) {
+        panic("switch_uvm: no proc");
+    }
+    if(p->kstack == 0) {
+        panic("switch+uvm: no kstack");
+    }
+    if(p->pml4 == 0) {
+        panic("switch_uvm: no pml4");
+    }
+
+    push_cli();
+    mycpu()->ts.rsp[0] = (uint64_t) p->kstack + KSTACKSIZE;
+    wcr3(V2P(p->pml4)); // user_init uses kalloc
+    pop_cli();
 }
 
 void kvmalloc(void) {

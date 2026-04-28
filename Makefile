@@ -15,6 +15,18 @@ LDFLAGS = -m elf_x86_64 \
 -nostdlib \
 -T kernel/linker.ld
 
+USERS = build/user/initcode.o
+
+build/user/%.o: user/%.asm
+	@mkdir -p build/user
+	$(AS) $(ASFLAGS) $< $@
+
+build/user/initcode.out: build/user/initcode.o
+	$(LD) -nostdlib -N -e _start -Ttext 0 -o $@ $<
+
+build/user/initcode: build/user/initcode.out
+	objcopy -S -O binary $< $@
+
 OBJS = build/main.o build/entry.o build/uart.o build/string.o build/bump.o build/mb2.o \
 build/debug.o build/vm.o build/kalloc.o build/mp.o build/vectors.o build/trap_asm.o build/trap.o \
 build/gop.o build/lapic.o build/swtch.o build/spinlock.o build/proc.o
@@ -36,8 +48,8 @@ build/%.o: kernel/driver/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 
-build/kernel.elf: $(OBJS)
-	$(LD) $(LDFLAGS) $^ -o $@
+build/kernel.elf: $(OBJS) build/user/initcode
+	$(LD) $(LDFLAGS) $(OBJS) --oformat elf64-x86-64 -b binary build/user/initcode -o $@ 
 
 build/BOOTX64.EFI: grub/grub.cfg
 	@mkdir -p build
