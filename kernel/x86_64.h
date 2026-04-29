@@ -28,6 +28,16 @@ static inline void widt(void *p, uint64_t size) {
     __asm__ volatile("lidt %0" : : "m"(gdtr));
 }
 
+#define MSR_EFER 0xC0000000 // we ve seen this at entry.asm, long mode enable
+#define EFER_SCE 0x1 // system call enable
+#define EFER_LME (1ULL << 8) // long mode enable
+
+#define MSR_STAR 0xC0000081 // segment selector
+#define MSR_LSTAR 0xC0000082 // rip 
+#define MSR_FMASK 0xC0000084 // flag to mask
+
+
+
 static inline uint64_t rdmsr(uint32_t msr) {
     uint32_t low, high;
     __asm__ volatile("rdmsr" : "=a"(low), "=d"(high) : "c"(msr));
