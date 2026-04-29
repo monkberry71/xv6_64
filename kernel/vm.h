@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+struct proc;
 
 typedef uint64_t pte_t;
 
@@ -15,3 +16,4 @@ void* io_remap(void* pa, uint64_t size);
 pte_t* setup_uvm(void);
 void init_uvm(pte_t *pml4, char *init, uint64_t sz);
 void switch_uvm(struct proc *p);
+pte_t* get_kpml4(void);

@@ -11,8 +11,12 @@
 #include "kalloc.h"
 #include "spinlock.h"
 #include "x86_64.h"
+#include "proc.h"
 static int map_pages(pte_t *pml4, void *va, uint64_t size, uint64_t pa, uint64_t perm);
 static pte_t *kpml4 = 0;
+pte_t* get_kpml4(void) {
+    return kpml4;
+}
 
 char __attribute__((aligned(16))) ist0[KSTACKSIZE];
 
@@ -111,7 +115,8 @@ void switch_uvm(struct proc *p) {
     }
 
     push_cli();
-    mycpu()->ts.rsp[0] = (uint64_t) p->kstack + KSTACKSIZE;
+    mycpu()->ts.rsp[0] = (uint64_t) p->kstack + KSTACKSIZE; // for interrupt
+    mycpu()->kernel_stack = (uint64_t) p->kstack + KSTACKSIZE; // for syscall
     wcr3(V2P(p->pml4)); // user_init uses kalloc
     pop_cli();
 }

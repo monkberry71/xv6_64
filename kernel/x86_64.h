@@ -28,7 +28,8 @@ static inline void widt(void *p, uint64_t size) {
     __asm__ volatile("lidt %0" : : "m"(gdtr));
 }
 
-#define MSR_EFER 0xC0000000 // we ve seen this at entry.asm, long mode enable
+// MSRs
+#define MSR_EFER 0xC0000080 // we ve seen this at entry.asm, long mode enable
 #define EFER_SCE 0x1 // system call enable
 #define EFER_LME (1ULL << 8) // long mode enable
 
@@ -36,6 +37,8 @@ static inline void widt(void *p, uint64_t size) {
 #define MSR_LSTAR 0xC0000082 // rip 
 #define MSR_FMASK 0xC0000084 // flag to mask
 
+#define MSR_GS_BASE 0xC0000101 // gs base of this cpu
+#define MSR_KERNEL_GS_BASE 0xC0000102 // gs base reserved for kernel mode
 
 
 static inline uint64_t rdmsr(uint32_t msr) {

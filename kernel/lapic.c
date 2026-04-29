@@ -4,6 +4,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "trap.h"
+#include "cpu.h"
 
 #define IA32_APIC_BASE_MSR 0x1B
 #define IA32_APIC_BASE_MSR_ENABLE 0x800
@@ -48,6 +49,7 @@ static void lapicw(uint64_t index, uint64_t value) {
 
 void lapic_init(void) {
     uint64_t apic_base = rdmsr(IA32_APIC_BASE_MSR);
+    mycpu()->lapic_id = apic_base;
     if( !(apic_base & IA32_APIC_BASE_MSR_ENABLE) ){
         wrmsr(IA32_APIC_BASE_MSR, apic_base | IA32_APIC_BASE_MSR_ENABLE);
     }

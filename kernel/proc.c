@@ -6,6 +6,7 @@
 #include "mmu.h"
 #include "kalloc.h"
 #include "debug.h"
+#include "memlayout.h"
 
 struct {
     struct spin_lock lock;
@@ -15,12 +16,9 @@ struct {
 int next_pid = 1;
 
 struct proc* myproc(void) {
-    struct cpu *c;
-    struct proc *p;
-
     push_cli();
-    c = mycpu();
-    p = c->proc;
+    struct cpu *c = mycpu();
+    struct proc *p = c->proc;
     pop_cli();
     return p;
 }
@@ -100,9 +98,12 @@ struct proc* alloc_proc(void) {
     release(&ptable.lock);
     return 0; // failed
 }
-
 void kthread_init(void* thread_func) {
     struct proc *p = alloc_proc();
+
+    // p->pml4 = P2V(V2P_KERN(get_kpml4()));
+    uint64_t kpml4_phy = V2P_KERN(get_kpml4());
+    p->pml4 = P2V(kpml4_phy); // pml4 entry should be direct mapping
     p->sz = PGSIZE_4KB;
     memset(p->tf, 0, sizeof(struct trap_frame));
     p->tf->cs = (SEG_KCODE << 3);

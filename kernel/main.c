@@ -13,6 +13,8 @@
 #include "lapic.h"
 #include "proc.h"
 #include "params.h"
+#include "cpu.h"
+#include "syscall.h"
 
 void proc_a(void) {
     // struct context* a_con;
@@ -58,6 +60,7 @@ int main(uint32_t mb2_info_phys) {
     serial_puts("kinit...");
     kinit();
     serial_puts("done\n");
+    cpu_init();
     seg_init();
     tv_init();
     idt_init();
@@ -70,10 +73,11 @@ int main(uint32_t mb2_info_phys) {
     process_init();
     
 
-    // kthread_init(proc_a);
     // kthread_init(proc_b);
     // kthread_init(proc_c);
     user_init();
+    kthread_init(proc_a);
+    syscall_init();
 
     serial_puts("Bye\n");
     // basic scheduler

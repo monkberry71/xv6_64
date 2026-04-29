@@ -6,5 +6,5 @@
 #define GOP_BLU 0x000000FF
 
 void gop_init(void);
-void gop_draw_pixel(uint32_t x, uint32_t y, uint32_t color);
-void gop_draw_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color);
+void gop_draw_pixel(uint64_t x, uint64_t y, uint64_t color);
+void gop_draw_rect(uint64_t x, uint64_t y, uint64_t w, uint64_t h, uint64_t color);

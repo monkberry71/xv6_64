@@ -40,7 +40,7 @@ void gop_init(void) {
     }
 }
 
-void gop_draw_pixel(uint32_t x, uint32_t y, uint32_t color) {
+void gop_draw_pixel(uint64_t x, uint64_t y, uint64_t color) {
     uint8_t bytes_per_pixel = gop_fb.bpp / 8;
     uint8_t *pixel = (uint8_t*) gop_fb.fb_base + y * gop_fb.pitch + x * bytes_per_pixel;
     for(uint8_t i=0; i<bytes_per_pixel; i++) {
@@ -48,12 +48,12 @@ void gop_draw_pixel(uint32_t x, uint32_t y, uint32_t color) {
     }
 }
 
-void gop_draw_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color) {
+void gop_draw_rect(uint64_t x, uint64_t y, uint64_t w, uint64_t h, uint64_t color) {
     // push_cli();
-    uint32_t x_end = x + w > gop_fb.width ? gop_fb.width : x + w;
-    uint32_t y_end = y + h > gop_fb.height ? gop_fb.height : y + h;
-    for(uint32_t row = y; row < y_end; row++)
-        for(uint32_t col = x; col < x_end; col++)
+    uint64_t x_end = x + w > gop_fb.width ? gop_fb.width : x + w;
+    uint64_t y_end = y + h > gop_fb.height ? gop_fb.height : y + h;
+    for(uint64_t row = y; row < y_end; row++)
+        for(uint64_t col = x; col < x_end; col++)
             gop_draw_pixel(col, row, color);
     // pop_cli();
 }

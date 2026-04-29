@@ -29,7 +29,8 @@ build/user/initcode: build/user/initcode.out
 
 OBJS = build/main.o build/entry.o build/uart.o build/string.o build/bump.o build/mb2.o \
 build/debug.o build/vm.o build/kalloc.o build/mp.o build/vectors.o build/trap_asm.o build/trap.o \
-build/gop.o build/lapic.o build/swtch.o build/spinlock.o build/proc.o
+build/gop.o build/lapic.o build/swtch.o build/spinlock.o build/proc.o build/cpu.o build/syscall.o \
+build/syscall_entry.o
 GRUB_MODULES = part_gpt fat normal multiboot2 all_video
 
 .PHONY: run clean debug format_usb format_esp
