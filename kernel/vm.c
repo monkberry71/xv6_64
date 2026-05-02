@@ -12,6 +12,7 @@
 #include "spinlock.h"
 #include "x86_64.h"
 #include "proc.h"
+#include "driver/uart.h"
 static int map_pages(pte_t *pml4, void *va, uint64_t size, uint64_t pa, uint64_t perm);
 static pte_t *kpml4 = 0;
 pte_t* get_kpml4(void) {
@@ -245,4 +246,95 @@ static void kernel_map_init(pte_t *pml4) {
         pdpt[PDPT_IDX(KERN_BASE) + i] = pdpt_entry;
     }
 
+}
+
+uint64_t dealloc_uvm(pte_t *pml4, uint64_t old_sz, uint64_t new_sz) {
+    if(new_sz >= old_sz) {
+        return old_sz;
+    }
+
+    for(uint64_t addr = ROUNDUP(new_sz, PGSIZE_4KB); addr < old_sz; addr += PGSIZE_4KB) {
+        pte_t *pte = walk_pml4(pml4, (void*) addr, 0);
+        if(!pte) {
+            // We actually don't know which(PML4, PDPT, PD) one is NULL, so just be safe
+            addr = (addr + PGSIZE_2MB) & ~(PGSIZE_2MB - 1); // jump 2MB
+            addr -= PGSIZE_4KB; // loop compensate
+            continue;
+        }
+
+        if((*pte & PTE_P) != 0) {
+            uint64_t pa = PTE_ADDR(*pte);
+            if(pa == 0) {
+                panic("dealloc_uvm : can't free");
+            }
+
+            kfree(P2V(pa));
+            *pte = 0;
+        }
+    }
+    return new_sz;
+}
+
+// allocate new pml4 and phy mem to grow process
+uint64_t alloc_uvm(pte_t *pml4, uint64_t old_sz, uint64_t new_sz) {
+    if(new_sz < old_sz) {
+        // ???
+        return old_sz;
+    }
+
+    if(new_sz >= USER_TOP) {
+        // 256 kernel pml4 entries
+        return 0;
+    }
+
+    for(uint64_t addr = ROUNDUP(old_sz, PGSIZE_4KB); addr < new_sz; addr += PGSIZE_4KB) {
+        void* mem = kalloc();
+        if(!mem) {
+            serial_puts("alloc_uvm OOM\n");
+            dealloc_uvm(pml4, new_sz, old_sz);
+            return 0;
+        }
+        memset(mem, 0, PGSIZE_4KB);
+        if(map_pages(pml4, (void*) addr, PGSIZE_4KB, V2P(mem), PTE_W | PTE_U) < 0) {
+            serial_puts("alloc_uvm OOM\n");
+            dealloc_uvm(pml4, new_sz, old_sz);
+            kfree(mem);
+            return 0;
+        }
+    }
+    return new_sz;
+}
+
+// free recursively, table must be virtual
+static void free_entry(pte_t *table, int lv) {
+    if(lv == 3) {
+        // lv3 -> it is a pt, all these entries are already freed by deallov_uvm
+        // free itself
+        kfree(table);
+        return;
+    }
+    
+    int max = (lv == 0) ? 256 : 512; 
+    // lv0 -> pml4, we need to keep the upper 256 entries, they are kernel's.
+    for(int i=0; i<max; i++) {
+        if(table[i] & PTE_P) {
+            free_entry(P2V(PTE_ADDR(table[i])), lv+1);
+        }
+    }
+    kfree(table);
+    return;
+}
+
+// free a page tables itselves
+void free_vm(pte_t *pml4) {
+    if(pml4 == 0) {
+        panic("free_vm: no pml4");
+    }
+    dealloc_uvm(pml4, USER_TOP, 0);
+
+    // lv = 0 pml4
+    // lv = 1 pdpt
+    // lv = 2 pd
+    // lv = 3 pt
+    free_entry(pml4, 0);
 }

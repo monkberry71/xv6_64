@@ -15,6 +15,8 @@
 #define PD_IDX(va)    (((uint64_t)(va) >> 21) & 0x1FF)
 #define PT_IDX(va)    (((uint64_t)(va) >> 12) & 0x1FF)
 
+#define PTE_ADDR(pte) ((pte) & ~(PGSIZE_4KB - 1))
+
 // PDE_P = 1 shl 0 ; present
 // PDE_RW = 1 shl 1 ; writable
 // PDE_US = 1 shl 2 ; User
