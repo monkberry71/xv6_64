@@ -76,7 +76,7 @@ int main(uint32_t mb2_info_phys) {
     // kthread_init(proc_b);
     // kthread_init(proc_c);
     user_init();
-    kthread_init(proc_a);
+    // kthread_init(proc_a);
     syscall_init();
 
     serial_puts("Bye\n");

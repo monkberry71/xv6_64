@@ -75,7 +75,7 @@ struct proc* alloc_proc(void) {
             uint8_t *sp = (uint8_t*)new_stack + KSTACKSIZE;
             sp -= sizeof(struct trap_frame);
             p->tf = (void*) sp;
-            // ------_>
+            // ------>
             // ------------ trap_frame --- stack_bottom
             //              ^sp
 
@@ -224,4 +224,99 @@ void yield(void) {
     myproc()->state = RUNNABLE;
     sched();
     release(&ptable.lock);
+}
+
+void sleep(void* chan, struct spin_lock *lk) {
+    struct proc *p = myproc();
+
+    if(p == 0) {
+        panic("sleep in scheduler");
+    }
+
+    if(lk == 0) {
+        // we need a lock to protect our sleepin condition
+        // if wakeup come in between check and sleep,
+        // the proc may sleep forever, so we lock it before check
+        panic("sleep with out lk");
+    }
+
+    // We must acquire ptable.lock to change p->state.
+    // After we hold ptable.lock, we won't miss any wakeup,
+    // because wakeup runs with ptable.lock locked.
+    // so we don't need to protect the sleeping condition.
+    // thus we can releae the lk. and we must, since the sleeping cond
+    // should be changed anyway.
+
+    // if lk is ptable.lock, we need it locked to change the p state anyway
+    // and it will be unlocked with scheduler, so we dont need to worry
+    // about the sleeping condition won't budge or not.
+    if(lk != &ptable.lock) {
+        acquire(&ptable.lock);
+        release(lk);
+    }
+
+    p->chan = chan;
+    p->state = SLEEPING;
+
+    sched();
+
+    p->chan = 0; // cleanup
+
+    if(lk != &ptable.lock) {
+        release(&ptable.lock);
+        acquire(lk);
+    }
+}
+
+/*
+wake up all processes sleeping on the chan, pure version
+use this when already ptable lock is held.
+*/
+static void wakeup_pure(void* chan) {
+    for(int i=0; i<NPROC; i++) {
+        struct proc *p = &ptable.procs[i];
+        if(p->state == SLEEPING && p->chan == chan) {
+            p->state = RUNNABLE; // wake up
+        }
+    }
+}
+
+void wakeup(void* chan) {
+    acquire(&ptable.lock);
+    wakeup_pure(chan);
+    release(&ptable.lock);
+}
+
+uint64_t fork(void) {
+    struct proc *new_p = alloc_proc();
+    struct proc *cur_p = myproc();
+
+    if(new_p == 0) {
+        return -1;
+    }
+
+    // new_p->pml4 = copy
+    new_p->pml4 = copy_uvm(cur_p->pml4, cur_p->sz);
+    if(new_p->pml4 == 0) {
+        kfree(new_p->kstack);
+        new_p->kstack = 0;
+        new_p->state = UNUSED;
+        return -1;
+    }
+
+    new_p->sz = cur_p->sz;
+    new_p->parent = cur_p;
+    *(new_p->tf) = *(cur_p->tf); // copy the value of the tf
+    new_p->tf->rax = 0; // return value must be zero.
+
+    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! open file dup
+
+    safe_strcpy(new_p->name, cur_p->name, sizeof(cur_p->name));
+    
+    uint64_t pid = new_p->pid;
+    acquire(&ptable.lock);
+    new_p->state = RUNNABLE;
+    release(&ptable.lock);
+
+    return pid;
 }

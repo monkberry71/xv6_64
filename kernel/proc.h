@@ -24,6 +24,7 @@ struct proc {
     uint64_t pid;
     struct proc *parent;
     struct trap_frame *tf;
+    struct regi_pile *rp; // for syscall
     struct context *context;
     void* chan;
     uint32_t killed;
@@ -40,3 +41,4 @@ void scheduler(void);
 void yield(void);
 void sched(void);
 void user_init(void);
+uint64_t fork(void);

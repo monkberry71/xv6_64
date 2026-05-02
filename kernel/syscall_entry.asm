@@ -48,6 +48,7 @@ macro popaq {
 
 section ".text"
 public syscall_entry
+public syscall_ret
 extrn syscall_dispatch
 syscall_entry:
 use64
@@ -61,7 +62,9 @@ use64
     call syscall_dispatch
     ; stack -->
     ; r15 ... r10 ... rax
+
     mov [rsp + 14 * 8], rax; return val to rax
+syscall_ret:
 
     popaq
     mov rsp, [gs:8] ; user stack 

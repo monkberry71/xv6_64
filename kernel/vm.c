@@ -79,7 +79,7 @@ pte_t* setup_uvm(void) {
 
     pml4 = (pte_t*) kalloc();
     if(pml4 == 0) return 0;
-    memset(pml4, 0, PGSIZE_4KB); // kalloc doesnt 0-filled page.
+    memset(pml4, 0, PGSIZE_4KB); // kalloc doesnt 0-fill a page.
 
     for(int i = 256; i < 512; i++) {
         pml4[i] = kpml4[i];
@@ -310,7 +310,7 @@ static void free_entry(pte_t *table, int lv) {
     if(lv == 3) {
         // lv3 -> it is a pt, all these entries are already freed by deallov_uvm
         // free itself
-        kfree(table);
+        kfree((void*) table);
         return;
     }
     
@@ -321,7 +321,7 @@ static void free_entry(pte_t *table, int lv) {
             free_entry(P2V(PTE_ADDR(table[i])), lv+1);
         }
     }
-    kfree(table);
+    kfree((void*) table);
     return;
 }
 
@@ -337,4 +337,37 @@ void free_vm(pte_t *pml4) {
     // lv = 2 pd
     // lv = 3 pt
     free_entry(pml4, 0);
+}
+
+pte_t* copy_uvm(pte_t *pml4, uint64_t sz) {
+    pte_t *new_pml4 = setup_uvm();
+    if(new_pml4 == 0) return 0;
+
+    for(uint64_t addr = 0; addr < sz; addr += PGSIZE_4KB) {
+        pte_t *pte = walk_pml4(pml4, (void*) addr, 0);
+        if(pte == 0) {
+            panic("copy_uvm: pte should exist");
+        }
+        if(!(*pte & PTE_P)) {
+            panic("copy_uvm: page not present");
+        }
+        uint64_t pa = PTE_ADDR(*pte);
+        uint64_t flags = PTE_FLAGS(*pte);
+        
+        void* mem = kalloc();
+        if(mem == 0) {
+            goto bad;
+        }
+        memcpy(mem, P2V(pa), PGSIZE_4KB);
+        if(map_pages(new_pml4, (void*) addr, PGSIZE_4KB, V2P(mem), flags) < 0) {
+            kfree(mem);
+            goto bad;
+        }
+        return new_pml4;
+
+
+    }
+    bad:
+        free_vm(new_pml4);
+        return 0;
 }

@@ -23,3 +23,4 @@
 #define SYS_draw   22
 
 void syscall_init(void);
+uint64_t sys_fork(void);
