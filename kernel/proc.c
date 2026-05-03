@@ -377,3 +377,73 @@ uint64_t fork(void) {
 
     return pid;
 }
+
+uint64_t wait(void) {
+    struct proc *curp = myproc();
+
+    acquire(&ptable.lock);
+
+    uint64_t pid;
+    for(;;) {
+        int have_kids = 0;
+        for(int i=0; i<NPROC; i++) {
+            struct proc *p = &ptable.procs[i];
+            if(p->parent != curp) continue;
+            have_kids = 1;
+            if(p->state == ZOMBIE) {
+                pid = p->pid;
+                kfree(p->kstack);
+                p->kstack = 0;
+
+                free_vm(p->pml4);
+                p->pid = 0;
+                p->parent = 0;
+                p->name[0] = 0;
+                p->killed = 0;
+                p->state = UNUSED;
+
+                release(&ptable.lock);
+                return pid;
+            }
+        }
+
+        if(!have_kids || curp->killed) {
+            // no kids
+            // or dead
+            release(&ptable.lock);
+            return -1;
+        }
+
+        sleep(curp, &ptable.lock);
+    }
+}
+
+void exit(void) {
+    struct proc *curp = myproc();
+    if(curp == init_proc) {
+        panic("exit: init??");
+    }
+
+    // !!!!!!!!!close all open file
+
+    acquire(&ptable.lock);
+
+    // tell my parent I love them very much
+    wakeup_pure(curp->parent);
+
+    // I am going to die, please adopt my children
+    for(int i=0; i<NPROC; i++) {
+        struct proc *p = &ptable.procs[i];
+        if(p->parent == curp) {
+            p->parent = init_proc;
+            if(p->state == ZOMBIE) {
+                wakeup_pure(init_proc);
+            }
+        }
+    }
+
+    // good bye cruel world
+    curp->state = ZOMBIE;
+    sched();
+    panic("I am dead");
+}

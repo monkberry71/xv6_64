@@ -18,3 +18,4 @@ void init_uvm(pte_t *pml4, char *init, uint64_t sz);
 void switch_uvm(struct proc *p);
 pte_t* get_kpml4(void);
 pte_t* copy_uvm(pte_t *pml4, uint64_t sz);
+void free_vm(pte_t *pml4);

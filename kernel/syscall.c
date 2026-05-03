@@ -31,7 +31,7 @@ void syscall_init(void) {
 // extern uint64_t sys_close(void);
 // extern uint64_t sys_dup(void);
 // extern uint64_t sys_exec(void);
-// extern uint64_t sys_exit(void);
+extern uint64_t sys_exit(void);
 extern uint64_t sys_fork(void);
 // extern uint64_t sys_fstat(void);
 // extern uint64_t sys_getpid(void);
@@ -45,7 +45,7 @@ extern uint64_t sys_fork(void);
 // extern uint64_t sys_sbrk(void);
 // extern uint64_t sys_sleep(void);
 // extern uint64_t sys_unlink(void);
-// extern uint64_t sys_wait(void);
+extern uint64_t sys_wait(void);
 // extern uint64_t sys_write(void);
 // extern uint64_t sys_uptime(void);
 extern uint64_t sys_draw(void);
@@ -53,8 +53,8 @@ extern uint64_t sys_draw(void);
 typedef uint64_t (*syscall_func) (void);
 static syscall_func syscalls[] = {
     [SYS_fork]    =sys_fork,
-    // [SYS_exit]    =sys_exit,
-    // [SYS_wait]    =sys_wait,
+    [SYS_exit]    =sys_exit,
+    [SYS_wait]    =sys_wait,
     // [SYS_pipe]    =sys_pipe,
     // [SYS_read]    =sys_read,
     // [SYS_kill]    =sys_kill,
