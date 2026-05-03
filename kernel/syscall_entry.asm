@@ -55,7 +55,7 @@ use64
     swapgs
     mov [gs:8], rsp ; save our user_rsp to mycpu struct
     mov rsp, [gs:16] ; get kstack from mycpu struct
-
+    push qword [gs:8]
     pushaq
 
     mov rdi, rsp
@@ -67,6 +67,6 @@ use64
 syscall_ret:
 
     popaq
-    mov rsp, [gs:8] ; user stack 
+    pop rsp
     swapgs
     sysretq; sysret becomes sysretl, which returns to 32 bit mode, use sysretq

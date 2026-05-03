@@ -94,6 +94,7 @@ struct regi_pile {
     uint64_t rcx;
     uint64_t rbx;
     uint64_t rax;
+    uint64_t rsp;
 };
 
 struct trap_frame {

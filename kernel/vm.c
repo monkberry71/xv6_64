@@ -363,10 +363,8 @@ pte_t* copy_uvm(pte_t *pml4, uint64_t sz) {
             kfree(mem);
             goto bad;
         }
-        return new_pml4;
-
-
     }
+    return new_pml4;
     bad:
         free_vm(new_pml4);
         return 0;

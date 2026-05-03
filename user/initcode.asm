@@ -28,6 +28,7 @@ _start:
     mov rdx, 30
     mov r10, 30
     mov r8, 0x00FFFF
+    syscall
 
 .loop:
     jmp .loop

@@ -53,6 +53,77 @@ void fork_ret(void) {
 // so declare it as a function or array
 // &function_name == function_name in c
 void trap_ret(void);
+struct proc* alloc_kthread(void) {
+
+    acquire(&ptable.lock);
+    for(int i=0; i<NPROC; i++) {
+        struct proc *p = &ptable.procs[i];
+        if(p->state == UNUSED) {
+            p->state = EMBRYO;
+            p->pid = next_pid++;
+
+            release(&ptable.lock);
+
+            void* new_stack = kalloc();
+            if(!new_stack) {
+                p->state = UNUSED;
+                return 0;
+            }
+            p->kstack = new_stack;
+
+
+            // uint8_t *sp = (uint8_t*)new_stack + KSTACKSIZE;
+            // sp -= sizeof(struct trap_frame);
+            // p->tf = (void*) sp;
+            // ------>
+            // ------------ trap_frame --- stack_bottom
+            //              ^sp
+
+            // sp -= 8;
+            // *(uint64_t *) sp = (uint64_t) trap_ret;
+            //  -------->
+            // -------- trap_ret -- trap_frame --- stack_bottom
+            
+            // sp -= sizeof(struct context);
+            // p->context = (void*) sp;
+            // memset(p->context, 0, sizeof(struct context));
+            // -------context ----- trap_ret ------ trap_frame ---- stack_bottom
+            // p->context->rip = (uint64_t) ;
+            // -- {context rip = fork_ret} ---- trap_ret --- tf -- st_bottom
+
+            return p;
+
+        }
+    }
+    release(&ptable.lock);
+    return 0; // failed
+}
+void kthread_init(void* thread_func) {
+    struct proc *p = alloc_kthread();
+
+    // p->pml4 = P2V(V2P_KERN(get_kpml4()));
+    uint64_t kpml4_phy = V2P_KERN(get_kpml4());
+    p->pml4 = P2V(kpml4_phy); // pml4 entry should be direct mapping
+    p->sz = PGSIZE_4KB;
+    // memset(p->tf, 0, sizeof(struct trap_frame));
+    // p->tf->cs = (SEG_KCODE << 3);
+    // p->tf->ss = (SEG_KDATA << 3);
+    // p->tf->rflags = FL_IF;
+    // p->tf->rsp = (uint64_t)(p->kstack + KSTACKSIZE);
+    // p->tf->rip = (uint64_t)thread_func;
+    char* sp = p->kstack + KSTACKSIZE;
+    sp -= sizeof(struct context);
+    p->context = (void*) sp;
+    memset(p->context, 0, sizeof(struct context));
+    p->context->rip = (uint64_t) thread_func;
+
+
+    acquire(&ptable.lock);
+    p->state = RUNNABLE;
+    release(&ptable.lock);
+}
+
+void syscall_ret(void);
 struct proc* alloc_proc(void) {
 
     acquire(&ptable.lock);
@@ -73,23 +144,24 @@ struct proc* alloc_proc(void) {
 
 
             uint8_t *sp = (uint8_t*)new_stack + KSTACKSIZE;
-            sp -= sizeof(struct trap_frame);
-            p->tf = (void*) sp;
-            // ------>
-            // ------------ trap_frame --- stack_bottom
-            //              ^sp
+            sp -= sizeof(struct regi_pile);
+            p->rp = (void*) sp;
+            // st ->
+            // --- regi_pile --- stack_bottom
 
             sp -= 8;
-            *(uint64_t *) sp = (uint64_t) trap_ret;
-            //  -------->
-            // -------- trap_ret -- trap_frame --- stack_bottom
+            *(uint64_t *) sp = (uint64_t) syscall_ret;
+            // st ->
+            // --- syscall_ret --- rp --- st_btm
             
             sp -= sizeof(struct context);
             p->context = (void*) sp;
             memset(p->context, 0, sizeof(struct context));
-            // -------context ----- trap_ret ------ trap_frame ---- stack_bottom
+            // st ->
+            // --- ctxt --- sys_ret --- rp --- st_btm
             p->context->rip = (uint64_t) fork_ret;
-            // -- {context rip = fork_ret} ---- trap_ret --- tf -- st_bottom
+            // st ->
+            // --- {ctxt rip = &fork_ret} --- sys_ret --- rp --- st_btm
 
             return p;
 
@@ -98,25 +170,6 @@ struct proc* alloc_proc(void) {
     release(&ptable.lock);
     return 0; // failed
 }
-void kthread_init(void* thread_func) {
-    struct proc *p = alloc_proc();
-
-    // p->pml4 = P2V(V2P_KERN(get_kpml4()));
-    uint64_t kpml4_phy = V2P_KERN(get_kpml4());
-    p->pml4 = P2V(kpml4_phy); // pml4 entry should be direct mapping
-    p->sz = PGSIZE_4KB;
-    memset(p->tf, 0, sizeof(struct trap_frame));
-    p->tf->cs = (SEG_KCODE << 3);
-    p->tf->ss = (SEG_KDATA << 3);
-    p->tf->rflags = FL_IF;
-    p->tf->rsp = (uint64_t)(p->kstack + KSTACKSIZE);
-    p->tf->rip = (uint64_t)thread_func;
-
-    acquire(&ptable.lock);
-    p->state = RUNNABLE;
-    release(&ptable.lock);
-}
-
 static struct proc *init_proc;
 void user_init(void) {
     extern char _binary_build_user_initcode_start[], _binary_build_user_initcode_size[];
@@ -129,12 +182,16 @@ void user_init(void) {
     }
     init_uvm(p->pml4, _binary_build_user_initcode_start, (uint64_t) _binary_build_user_initcode_size);
     p->sz = PGSIZE_4KB;
-    memset(p->tf, 0, sizeof(struct trap_frame));
-    p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
-    p->tf->ss = (SEG_UDATA << 3) | DPL_USER;
-    p->tf->rflags = FL_IF;
-    p->tf->rsp = (uint64_t) PGSIZE_4KB;
-    p->tf->rip = 0; // initcode.asm begins
+    // memset(p->tf, 0, sizeof(struct trap_frame));
+    // p->tf->cs = (SEG_UCODE << 3) | DPL_USER;
+    // p->tf->ss = (SEG_UDATA << 3) | DPL_USER;
+    // p->tf->rflags = FL_IF;
+    // p->tf->rsp = (uint64_t) PGSIZE_4KB;
+    // p->tf->rip = 0; // initcode.asm begins
+    memset(p->rp, 0, sizeof(struct regi_pile));
+    p->rp->r11 = (uint64_t) FL_IF; // rflags
+    p->rp->rcx = (uint64_t) 0;
+    p->rp->rsp = (uint64_t) PGSIZE_4KB;
 
     safe_strcpy(p->name, "initcode", sizeof(p->name));
     // p->cwd
@@ -306,8 +363,8 @@ uint64_t fork(void) {
 
     new_p->sz = cur_p->sz;
     new_p->parent = cur_p;
-    *(new_p->tf) = *(cur_p->tf); // copy the value of the tf
-    new_p->tf->rax = 0; // return value must be zero.
+    *(new_p->rp) = *(cur_p->rp); // copy the value of the rp
+    new_p->rp->rax = 0; // return value must be zero.
 
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! open file dup
 
