@@ -42,3 +42,5 @@ void yield(void);
 void sched(void);
 void user_init(void);
 uint64_t fork(void);
+void wakeup(void* chan);
+void sleep(void* chan, struct spin_lock *lk);
