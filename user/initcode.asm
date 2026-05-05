@@ -42,7 +42,7 @@ _start:
     ;; draw(0, 0, 30, 30, sky)
     syscall 
 
-    mov rcx, 0x0FFFFFFF
+    mov rcx, 0xFFFFFFFF
 .delay_loop:
     dec rcx
     jnz .delay_loop

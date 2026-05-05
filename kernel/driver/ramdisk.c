@@ -2,7 +2,7 @@
 #include "../fs.h"
 #include "string.h"
 
-static char ramdisk[DISK_SIZE];
+static uint8_t ramdisk[DISK_SIZE];
 
 static uint64_t disk_size;
 
@@ -41,4 +41,8 @@ void rd_rw(struct buf *b) {
     }
 
     b->flags |= B_VALID; // anyway, we synced it.
+}
+
+uint8_t* get_ramdisk(void) {
+    return ramdisk;
 }

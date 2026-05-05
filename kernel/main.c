@@ -15,6 +15,8 @@
 #include "params.h"
 #include "cpu.h"
 #include "syscall.h"
+#include "bio.h"
+#include "driver/ramdisk.h"
 
 void proc_a(void) {
     // struct context* a_con;
@@ -78,6 +80,10 @@ int main(uint32_t mb2_info_phys) {
     user_init();
     // kthread_init(proc_a);
     syscall_init();
+
+    rd_init();
+    bcache_init();
+    // test_bcache();
 
     serial_puts("Bye\n");
     // basic scheduler

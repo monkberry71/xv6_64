@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "sleeplock.h"
 
 #define BSIZE 4096
 #define DISK_SIZE (16 * 1024 * 1024)
@@ -14,7 +15,7 @@ struct buf {
     uint64_t flags;
     uint64_t dev;
     uint64_t block_no;
-    // struct sleep_lock lk;
+    struct sleep_lock lk;
     uint32_t ref_count;
     struct buf *prev, *next, *qnext;
     uint8_t data[BSIZE];
