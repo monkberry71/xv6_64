@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "vm.h"
 #include "x86_64.h"
+#include "file.h"
 
 enum proc_state { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
@@ -29,7 +30,7 @@ struct proc {
     void* chan;
     uint32_t killed;
     // struct fil
-    // inode
+    struct inode *cwd;
     char name[32];
 };
 

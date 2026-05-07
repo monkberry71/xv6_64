@@ -19,3 +19,20 @@ char* safe_strcpy(char *s, const char *t, uint64_t n) {
     *s = 0;
     return os;
 }
+
+int strncmp(const char *s, const char *t, uint64_t n) {
+    while(n>0 && *s && *s == *t) {
+        n--;
+        s++;
+        t++;
+    }
+    if(n == 0) return 0;
+    return (uint8_t)*s - (uint8_t)*t;
+}
+
+char* strncpy(char *s, const char *t, int n) {
+    char* os = s;
+    while(n-->0 && (*s++ = *t++) != 0);
+    while(n-->0) *s++ = 0;
+    return os;
+}

@@ -63,6 +63,7 @@ static struct buf* bget(uint64_t dev, uint64_t block_no) {
 
         release(&bcache.lock); 
         // We are gonna sleep, so we need to release any spinlock
+        // we done editing bcache fields anyway
         acquire_sleep(&b->lk);
 
         // We only check the refcnt, cuz we dont have logging

@@ -6,3 +6,4 @@
 #define MAXOPBLOCKS 10
 #define NBUF (MAXOPBLOCKS * 3)
 #define NINODE 30
+#define NDEV 10
