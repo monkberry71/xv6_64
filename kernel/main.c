@@ -17,6 +17,7 @@
 #include "syscall.h"
 #include "bio.h"
 #include "driver/ramdisk.h"
+#include "driver/console.h"
 
 void proc_a(void) {
     // struct context* a_con;
@@ -67,9 +68,9 @@ int main(uint32_t mb2_info_phys) {
     tv_init();
     idt_init();
     gop_init();
-    gop_draw_rect(0, 0, 100, 100, GOP_RED);   // red square
-    gop_draw_rect(100, 0, 100, 100, GOP_GRN); // green square
-    gop_draw_rect(200, 0, 100, 100, GOP_BLU); // blue square
+    // gop_draw_rect(0, 0, 100, 100, GOP_RED);   // red square
+    // gop_draw_rect(100, 0, 100, 100, GOP_GRN); // green square
+    // gop_draw_rect(200, 0, 100, 100, GOP_BLU); // blue square
     // __asm__ volatile("sti");
     lapic_init();
     process_init();
@@ -85,6 +86,12 @@ int main(uint32_t mb2_info_phys) {
     bcache_init();
     // test_bcache();
 
+    // font_draw_char(400, 0, 'A', GOP_BLU, GOP_GRN);
+    console_init();
+    cprintf("--- Console Testing ---\n");
+    cprintf("Screen size: %d x %d\n", g_console.max_cols, g_console.max_rows);
+    cprintf("Magic Num: 0x%x\n", 0xDEADBEAF);
+    cprintf("Hello %s\n", "World from amd64");
     serial_puts("Bye\n");
     // basic scheduler
     scheduler();

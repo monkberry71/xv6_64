@@ -4,6 +4,7 @@
 #include "sleeplock.h"
 #include "params.h"
 #include "driver/ramdisk.h"
+#include "debug.h"
 
 struct {
     struct spin_lock lock;

@@ -3,13 +3,10 @@
 #include "vm.h"
 #include "debug.h"
 #include "spinlock.h"
+#include "gop.h"
 
 extern struct mb2_info* reserved_mb2_info;
-struct {
-    void* fb_base; // io remapped.
-    uint64_t width, height, pitch;
-    uint8_t bpp, type;
-} gop_fb;
+struct gop_fb gop_fb;
 
 
 void gop_init(void) {
