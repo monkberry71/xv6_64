@@ -7,3 +7,4 @@
 #define NBUF (MAXOPBLOCKS * 3)
 #define NINODE 30
 #define NDEV 10
+#define NFILE 100

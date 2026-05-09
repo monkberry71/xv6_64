@@ -6,6 +6,16 @@
 #define NINDIRECT (BSIZE / sizeof(uint64_t))
 #define MAXFILEBLK (NDIRECT + NINDIRECT)
 
+struct file {
+    enum { FD_NONE, FD_PIPE, FD_INODE } type;
+    int ref;
+    char readable;
+    char writable;
+    // struct pipe
+    struct inode *ip;
+    uint64_t off;
+};
+
 struct inode {
     uint64_t dev;
     uint64_t inum;

@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "sleeplock.h"
 #include "file.h"
+#include "stat.h"
 
 #define ROOTINO 1
 #define BSIZE 4096
@@ -66,3 +67,10 @@ struct dir_ent {
     uint64_t inum; // 8byte
     char name[DIRSIZ];
 };
+
+void iput(struct inode *ip);
+void ilock(struct inode *ip);
+void iunlock(struct inode *ip);
+int64_t readi(struct inode *ip, char *dst, uint64_t off, uint64_t n);
+int64_t writei(struct inode *ip, char *src, uint64_t off, uint64_t n);
+void stati(struct inode* ip, struct stat *st);

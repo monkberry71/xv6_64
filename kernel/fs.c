@@ -6,6 +6,7 @@
 #include "string.h"
 #include "stat.h"
 #include "proc.h"
+#include "debug.h"
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
@@ -30,7 +31,7 @@ static uint64_t balloc(uint64_t dev) {
         // bp is a bitmap block that holds bth data block
         for(uint64_t bi=0; bi < BPB && b + bi < sb.size; bi++) {
             uint64_t m = 1 << (bi % 8);
-            // which bit bit in the byte?
+            // which bit in the byte?
             if((bp->data[bi/8] & m) != 0) continue; 
             // this block is not free. continue
 
@@ -78,6 +79,7 @@ void iinit(uint64_t dev) {
 // Alloc an inode on the disk
 // Mark it as allocated by giving it type
 // 
+static struct inode* iget(uint64_t dev, uint64_t inum);
 struct inode* ialloc(uint64_t dev, short type) {
     for(int inum = 1; inum <sb.n_inodes; inum++) {
         struct buf *bp = bread(dev, IBLOCK(inum, sb));

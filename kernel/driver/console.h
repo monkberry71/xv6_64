@@ -22,8 +22,6 @@ struct console {
     int font_w, font_h;
 };
 
-extern struct console g_console;
-
 void console_putc(char c);
 void console_init(void);
 void cprintf(char *fmt, ...);
