@@ -19,26 +19,6 @@ void font_draw_char(uint64_t x, uint64_t y, char c, uint64_t fg, uint64_t bg) {
 
 struct console g_console;
 
-void console_init(void) {
-    
-    g_console.gop_fb = &gop_fb;
-
-    g_console.font_w = 8;
-    g_console.font_h = 16;
-
-    g_console.max_cols = g_console.gop_fb->width / g_console.font_w;
-    g_console.max_rows = g_console.gop_fb->height / g_console.font_h;
-
-    g_console.cur_y = 0;
-    g_console.cur_x = 0;
-
-    g_console.fg = GOP_WHI;
-    g_console.bg = GOP_BLK;
-
-    g_console.pixels_per_scanline = g_console.gop_fb->pitch / (g_console.gop_fb->bpp / 8);
-    // pitch means byte per row
-}
-
 void console_redraw_all() {
     gop_draw_rect(0,0, 
         g_console.gop_fb->width,
@@ -81,13 +61,13 @@ void console_putc(char c) {
         font_draw_char(g_console.cur_x*g_console.font_w,g_console.cur_y*g_console.font_h, c, g_console.fg, g_console.bg);
         g_console.cur_x++;
     }
-
+    
     // next line
     if(g_console.cur_x >= g_console.max_cols) {
         g_console.cur_x = 0;
         g_console.cur_y++;
     }
-
+    
     if(g_console.cur_y >= g_console.max_rows) {
         console_scroll();
         g_console.cur_y = g_console.max_rows - 1;
@@ -97,23 +77,23 @@ void console_putc(char c) {
 static char digits[] = "0123456789abcdef";
 static void print_int(int xx, int base, int sign) {
     char buf[16];
-
+    
     unsigned x;
     if(sign && (sign = (xx < 0))) {
         x = -xx;
     } else {
         x = xx;
     }
-
+    
     if(sign) {
         console_putc('-');
     }
-
+    
     int i = 0;
     do {
         buf[i++] = digits[x % base];
     } while((x /= base) != 0);
-
+    
     while(--i >= 0) {
         console_putc(buf[i]);
     }
@@ -122,7 +102,7 @@ static void print_int(int xx, int base, int sign) {
 void cprintf(char *fmt, ...) {
     va_list ap;
     if(fmt == 0) return;
-
+    
     int c;
     va_start(ap, fmt);
     for(int i=0; (c = fmt[i] & 0xFF) != 0; i++) {
@@ -131,11 +111,11 @@ void cprintf(char *fmt, ...) {
             console_putc(c);
             continue;
         }
-
+        
         // ok c is the one that come after %
         c = fmt[++i] & 0xFF;
         if(c==0) break;
-
+        
         switch(c) {
             case 'd': {
                 print_int(va_arg(ap, int), 10, 1);
@@ -165,4 +145,25 @@ void cprintf(char *fmt, ...) {
         }
     }
     va_end(ap);
+}
+
+void console_init(void) {
+    
+    g_console.gop_fb = &gop_fb;
+
+    g_console.font_w = 8;
+    g_console.font_h = 16;
+
+    g_console.max_cols = g_console.gop_fb->width / g_console.font_w;
+    g_console.max_rows = g_console.gop_fb->height / g_console.font_h;
+
+    g_console.cur_y = 0;
+    g_console.cur_x = 0;
+
+    g_console.fg = GOP_WHI;
+    g_console.bg = GOP_BLK;
+
+    g_console.pixels_per_scanline = g_console.gop_fb->pitch / (g_console.gop_fb->bpp / 8);
+    // pitch means byte per row
+    
 }

@@ -73,7 +73,8 @@ void iinit(uint64_t dev) {
         init_sleep_lock(&icache.inodes[i].lock, "inode");
     }
 
-    read_sb(dev, &sb);
+    // read_sb(dev, &sb);
+    // what for ramdisk? just init sb directly
 }
 
 // Alloc an inode on the disk
@@ -378,6 +379,7 @@ struct inode* dir_lookup(struct inode *dp, char *name, uint64_t *poff) {
     return 0;
 }
 
+// add a new dir entry to directory inode
 int dir_link(struct inode *dp, char *name, uint64_t inum) {
     // check no name collision
     struct inode *ip = dir_lookup(dp, name, 0);
@@ -389,6 +391,7 @@ int dir_link(struct inode *dp, char *name, uint64_t inum) {
 
     struct dir_ent de;
     uint64_t off;
+    // find empty entry slot
     for(off = 0; off < dp->size; off += sizeof(struct dir_ent)) {
         if(readi(dp, (char*)&de, off, sizeof(struct dir_ent)) != sizeof(struct dir_ent)) {
             panic("dir_link can't read");
@@ -419,7 +422,7 @@ int dir_link(struct inode *dp, char *name, uint64_t inum) {
 static char* skip_elem(char *path, char *name) {
     while(*path == '/') path++; //skip all '/'
     if(*path == 0) return 0;
-    char *s = path; // finally, some letter not a /
+    char *s = path; // finally, some letter not '/'
     while(*path != '/' && *path != 0) path++; // go till the name ends
     int len = path - s; 
     if(len >= DIRSIZ) {
@@ -472,4 +475,50 @@ struct inode* namei(char *path) {
 
 struct inode* namei_parent(char *path, char *name) {
     return namex(path, 1, name);
+}
+
+void mkfs(uint64_t dev) {
+    // for now, rd is already zeroed
+
+    // write the superblock
+    // read_sb(dev, &sb);
+    sb.size = NBLOCKS;
+    sb.n_blocks = (NBLOCKS - (1 + 1 + 1 + 3)); // rsrvd, sb, bitmap, inode
+    sb.n_inodes = (3 * BSIZE) / sizeof(struct dinode);
+    sb.inode_start = 3;
+    sb.bmap_start = 2;
+    // should I really re-write this to the rd? idk..
+    // nobody calls read_sb, but for safety...
+
+    struct buf *sbp = bread(dev, 1);
+    memcpy(sbp->data, &sb, sizeof(struct super_block));
+    bwrite(sbp);
+    brelse(sbp);
+
+    struct buf *bmap = bread(dev, sb.bmap_start);
+    bmap->data[0] = (1 << 6) - 1;
+    bwrite(bmap);
+    brelse(bmap);
+
+
+    // alloc root inode
+    struct inode *rooti = ialloc(dev, T_DIR);
+    // it gets the first one.
+
+    ilock(rooti);
+    
+    rooti->nlink = 1;
+    iupdate(rooti);
+
+    dir_link(rooti, ".", ROOTINO);
+    dir_link(rooti, "..", ROOTINO);
+
+    iunlock(rooti);
+    iput(rooti);
+}
+
+void fs_init(uint64_t dev) {
+    // use this when using rd
+    iinit(dev);
+    mkfs(dev);
 }

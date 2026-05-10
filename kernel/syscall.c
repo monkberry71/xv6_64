@@ -27,71 +27,72 @@ void syscall_init(void) {
     wrmsr(MSR_FMASK, FL_IF);
 }
 
-// extern uint64_t sys_chdir(void);
-// extern uint64_t sys_close(void);
-// extern uint64_t sys_dup(void);
-// extern uint64_t sys_exec(void);
-extern uint64_t sys_exit(void);
-extern uint64_t sys_fork(void);
-// extern uint64_t sys_fstat(void);
-// extern uint64_t sys_getpid(void);
-// extern uint64_t sys_kill(void);
-// extern uint64_t sys_link(void);
-// extern uint64_t sys_mkdir(void);
-// extern uint64_t sys_mknod(void);
-// extern uint64_t sys_open(void);
-// extern uint64_t sys_pipe(void);
-// extern uint64_t sys_read(void);
-// extern uint64_t sys_sbrk(void);
-// extern uint64_t sys_sleep(void);
-// extern uint64_t sys_unlink(void);
-extern uint64_t sys_wait(void);
-// extern uint64_t sys_write(void);
-// extern uint64_t sys_uptime(void);
-extern uint64_t sys_draw(void);
+extern int64_t sys_chdir(void);
+extern int64_t sys_close(void);
+extern int64_t sys_dup(void);
+// extern int64_t sys_exec(void);
+extern int64_t sys_exit(void);
+extern int64_t sys_fork(void);
+extern int64_t sys_fstat(void);
+// extern int64_t sys_getpid(void);
+// extern int64_t sys_kill(void);
+// extern int64_t sys_link(void);
+extern int64_t sys_mkdir(void);
+extern int64_t sys_mknod(void);
+extern int64_t sys_open(void);
+// extern int64_t sys_pipe(void);
+extern int64_t sys_read(void);
+// extern int64_t sys_sbrk(void);
+// extern int64_t sys_sleep(void);
+// extern int64_t sys_unlink(void);
+extern int64_t sys_wait(void);
+extern int64_t sys_write(void);
+// extern int64_t sys_uptime(void);
+extern int64_t sys_draw(void);
 
-typedef uint64_t (*syscall_func) (void);
+typedef int64_t (*syscall_func) (void);
 static syscall_func syscalls[] = {
     [SYS_fork]    =sys_fork,
     [SYS_exit]    =sys_exit,
     [SYS_wait]    =sys_wait,
     // [SYS_pipe]    =sys_pipe,
-    // [SYS_read]    =sys_read,
+    [SYS_read]    =sys_read,
     // [SYS_kill]    =sys_kill,
     // [SYS_exec]    =sys_exec,
-    // [SYS_fstat]   =sys_fstat,
-    // [SYS_chdir]   =sys_chdir,
-    // [SYS_dup]     =sys_dup,
+    [SYS_fstat]   =sys_fstat,
+    [SYS_chdir]   =sys_chdir,
+    [SYS_dup]     =sys_dup,
     // [SYS_getpid]  =sys_getpid,
     // [SYS_sbrk]    =sys_sbrk,
     // [SYS_sleep]   =sys_sleep,
     // [SYS_uptime]  =sys_uptime,
-    // [SYS_open]    =sys_open,
-    // [SYS_write]   =sys_write,
-    // [SYS_mknod]   =sys_mknod,
+    [SYS_open]    =sys_open,
+    [SYS_write]   =sys_write,
+    [SYS_mknod]   =sys_mknod,
     // [SYS_unlink]  =sys_unlink,
     // [SYS_link]    =sys_link,
-    // [SYS_mkdir]   =sys_mkdir,
-    // [SYS_close]   =sys_close,
+    [SYS_mkdir]   =sys_mkdir,
+    [SYS_close]   =sys_close,
     [SYS_draw]    =sys_draw
 };
 
-void syscall_dispatch(struct trap_frame *tf) {
+void syscall_dispatch(struct regi_pile *rp) {
     // dont use tf interrupt parts
-    uint64_t num = tf->rax;
-    myproc()->tf = tf;
+    uint64_t num = rp->rax;
+    myproc()->rp = rp;
 
     #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
     if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-        tf->rax = syscalls[num]();
+        rp->rax = syscalls[num]();
     } else {
         serial_hex(num);
         serial_puts("<- unknown syscall\n");
-        tf->rax = -1;
+        rp->rax = -1;
     }
 }
 
-uint64_t sys_draw(void) {
-    struct trap_frame *tf = myproc()->tf;
-    gop_draw_rect(tf->rdi, tf->rsi, tf->rdx, tf->r10, tf->r8);
+int64_t sys_draw(void) {
+    struct regi_pile *rp = myproc()->rp;
+    gop_draw_rect(rp->rdi, rp->rsi, rp->rdx, rp->r10, rp->r8);
+    return 0;
 }

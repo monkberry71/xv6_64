@@ -4,7 +4,7 @@
 #include "file.h"
 #include "stat.h"
 
-#define ROOTINO 1
+#define ROOTINO 1 // root dir inode
 #define BSIZE 4096
 #define DISK_SIZE (16 * 1024 * 1024)
 #define NBLOCKS (DISK_SIZE / BSIZE)
@@ -18,7 +18,7 @@
 struct super_block {
     uint64_t size; // Size of fs image (in blocks)
     uint64_t n_blocks; // num of data blocks
-    uint64_t n_inodes; // num of inodes
+    uint64_t n_inodes; // num of inodes(not block, inode count)
     // uint64_t n_logs
     uint64_t inode_start; // block_no of first inode block
     uint64_t bmap_start; // block_no of first free map block
@@ -74,3 +74,11 @@ void iunlock(struct inode *ip);
 int64_t readi(struct inode *ip, char *dst, uint64_t off, uint64_t n);
 int64_t writei(struct inode *ip, char *src, uint64_t off, uint64_t n);
 void stati(struct inode* ip, struct stat *st);
+struct inode* namei_parent(char *path, char *name) ;
+struct inode* namei(char *path);
+struct inode* dir_lookup(struct inode *dp, char *name, uint64_t *poff);
+int dir_link(struct inode *dp, char *name, uint64_t inum);
+struct inode* ialloc(uint64_t dev, short type);
+void iupdate(struct inode *ip);
+
+void fs_init(uint64_t dev) ;

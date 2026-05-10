@@ -4,6 +4,7 @@
 #include "vm.h"
 #include "x86_64.h"
 #include "file.h"
+#include "params.h"
 
 enum proc_state { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
@@ -29,7 +30,7 @@ struct proc {
     struct context *context;
     void* chan;
     uint32_t killed;
-    // struct fil
+    struct file *ofile[NOFILE];
     struct inode *cwd;
     char name[32];
 };

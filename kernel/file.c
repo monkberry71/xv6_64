@@ -54,6 +54,8 @@ void file_close(struct file *f) {
         release(&ftable.lock);
         return;
     }
+
+    // f->ref was 1, now 0.
     struct file ff = *f;
     f->ref = 0;
     f->type = FD_NONE;
@@ -85,7 +87,7 @@ int64_t file_read(struct file *f, char *addr, uint64_t n) {
     }
     if(f->type == FD_INODE) {
         ilock(f->ip);
-        uint64_t r = readi(f->ip, addr, f->off, n);
+        int64_t r = readi(f->ip, addr, f->off, n);
         if(r>0) {
             f->off += r;
         }
@@ -103,7 +105,7 @@ int64_t file_write(struct file *f, char *addr, uint64_t n) {
     }
     if(f->type == FD_INODE) {
         ilock(f->ip);
-        uint64_t r = writei(f->ip, addr, f->off, n);
+        int64_t r = writei(f->ip, addr, f->off, n);
         if(r>0) {
             f->off += r;
         }
