@@ -171,7 +171,7 @@ int64_t sys_open(void) {
 
     iunlock(ip);
     
-    // ok, we dont need the ftable lock, because when file_alloc, with lock, it increase the ref, so other thread wont pick it
+    // we dont need the ftable lock, because when file_alloc, with lock, it increase the ref, so other thread wont pick it
     f->type = FD_INODE;
     f->ip = ip;
     f->off = 0;
@@ -186,6 +186,15 @@ int64_t sys_mkdir(void) {
     
     struct inode *ip = create(path, T_DIR, 0, 0);
     if(ip == 0) return -1;
+    iunlock(ip);
+    iput(ip);
+    return 0;
+}
+
+int64_t mknod_con(void) {
+    // just for testing
+    struct inode *ip = create("/console", T_DEV, 1, 1);
+    if(ip == 0) return 0;
     iunlock(ip);
     iput(ip);
     return 0;

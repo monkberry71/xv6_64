@@ -50,6 +50,9 @@ void proc_c(void) {
     }
 }
 
+int64_t mknod_con(void);
+int64_t file_write(struct file *f, char *addr, uint64_t n);
+
 int main(uint32_t mb2_info_phys) {
     // uint32_t* test_writing_point = KERN_BASE + 8;
     // *test_writing_point = 0xDEADBEEF;
@@ -69,25 +72,12 @@ int main(uint32_t mb2_info_phys) {
     tv_init();
     idt_init();
     gop_init();
-    // gop_draw_rect(0, 0, 100, 100, GOP_RED);   // red square
-    // gop_draw_rect(100, 0, 100, 100, GOP_GRN); // green square
-    // gop_draw_rect(200, 0, 100, 100, GOP_BLU); // blue square
-    // __asm__ volatile("sti");
     lapic_init();
     process_init();
-    
-
-    // kthread_init(proc_b);
-    // kthread_init(proc_c);
     user_init();
-    // kthread_init(proc_a);
     syscall_init();
-
     rd_init();
     bcache_init();
-    // test_bcache();
-
-    // font_draw_char(400, 0, 'A', GOP_BLU, GOP_GRN);
     console_init();
     cprintf("--- Console Testing ---\n");
     // cprintf("Screen size: %d x %d\n", g_console.max_cols, g_console.max_rows);
@@ -96,12 +86,15 @@ int main(uint32_t mb2_info_phys) {
     serial_puts("Bye\n");
 
     fs_init(ROOTDEV);
-    struct inode *rooti = namei("/");
-    if(rooti == 0) panic("wtf no root");
-    ilock(rooti);
-    cprintf("root type=%d size=%d\n", rooti->type, rooti->size);
-    iunlock(rooti);
-    iput(rooti);
+    mknod_con();
+    // struct inode *rooti = namei("/");
+    // if(rooti == 0) panic("wtf no root");
+    // ilock(rooti);
+    // cprintf("root type=%d size=%d\n", rooti->type, rooti->size);
+    // iunlock(rooti);
+    // iput(rooti);
     // basic scheduler
+
+    
     scheduler();
 }

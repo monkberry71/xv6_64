@@ -4,6 +4,17 @@ section ".text" executable
 
 public _start
 _start:
+    mov rax, 15
+    mov rdi, console_path
+    mov rsi, 1
+    syscall
+
+    mov rdi, rax
+    mov rax, 16
+    mov rsi, message
+    mov rdx, message_len
+    syscall
+
 ;     mov rax, 1
 ;     syscall ;fork
 
@@ -53,3 +64,8 @@ _start:
 
 .loop:
     jmp .loop
+
+section ".rodata"
+console_path db "/console", 0
+message db "write syscall to console works", 10
+message_len = $ - message
