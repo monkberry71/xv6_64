@@ -5,6 +5,7 @@
 #include "driver/uart.h"
 #include "proc.h"
 #include "gop.h"
+#include "params.h"
 
 void syscall_entry(void);
 void syscall_init(void) {
@@ -30,7 +31,7 @@ void syscall_init(void) {
 extern int64_t sys_chdir(void);
 extern int64_t sys_close(void);
 extern int64_t sys_dup(void);
-// extern int64_t sys_exec(void);
+extern int64_t sys_exec(void);
 extern int64_t sys_exit(void);
 extern int64_t sys_fork(void);
 extern int64_t sys_fstat(void);
@@ -58,7 +59,7 @@ static syscall_func syscalls[] = {
     // [SYS_pipe]    =sys_pipe,
     [SYS_read]    =sys_read,
     // [SYS_kill]    =sys_kill,
-    // [SYS_exec]    =sys_exec,
+    [SYS_exec]    =sys_exec,
     [SYS_fstat]   =sys_fstat,
     [SYS_chdir]   =sys_chdir,
     [SYS_dup]     =sys_dup,
@@ -81,7 +82,7 @@ void syscall_dispatch(struct regi_pile *rp) {
     uint64_t num = rp->rax;
     myproc()->rp = rp;
 
-    #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+    
     if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
         rp->rax = syscalls[num]();
     } else {

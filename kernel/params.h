@@ -8,5 +8,8 @@
 #define NINODE 30
 #define NDEV 10
 #define NFILE 100
-#define NOFILE 16 
+#define NOFILE 16
+#define MAXARG 32 
 // N open file
+
+#define NELEM(x) (sizeof(x)/sizeof((x)[0]))

@@ -19,3 +19,8 @@ void switch_uvm(struct proc *p);
 pte_t* get_kpml4(void);
 pte_t* copy_uvm(pte_t *pml4, uint64_t sz);
 void free_vm(pte_t *pml4);
+uint64_t alloc_uvm(pte_t *pml4, uint64_t old_sz, uint64_t new_sz);
+int load_uvm(pte_t *pml4, char *addr, struct inode *ip, uint64_t offset, uint64_t sz) ;
+void clear_pte_u(pte_t *pml4, char *uva);
+int copy_out(pte_t *pml4, uint64_t va, void* p, uint64_t len);
+char* uva2dma(pte_t *pml4, char *uva);

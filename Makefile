@@ -15,11 +15,11 @@ LDFLAGS = -m elf_x86_64 \
 -nostdlib \
 -T kernel/linker.ld
 
-USERS = build/user/initcode.o
+# USERS = build/user/initcode.o
 
-build/user/%.o: user/%.asm
-	@mkdir -p build/user
-	$(AS) $(ASFLAGS) $< $@
+# build/user/%.o: user/%.asm
+# 	@mkdir -p build/user
+# 	$(AS) $(ASFLAGS) $< $@
 
 build/user/initcode.out: build/user/initcode.o
 	$(LD) -nostdlib -N -e _start -Ttext 0 -o $@ $<
@@ -31,7 +31,7 @@ OBJS = build/main.o build/entry.o build/uart.o build/string.o build/bump.o build
 build/debug.o build/vm.o build/kalloc.o build/mp.o build/vectors.o build/trap_asm.o build/trap.o \
 build/gop.o build/lapic.o build/swtch.o build/spinlock.o build/proc.o build/cpu.o build/syscall.o \
 build/syscall_entry.o build/sysproc.o build/bio.o build/ramdisk.o build/sleeplock.o \
-build/console.o build/sysfile.o build/file.o build/fs.o
+build/console.o build/sysfile.o build/file.o build/fs.o build/exec.o
 GRUB_MODULES = part_gpt fat normal multiboot2 all_video
 
 .PHONY: run clean debug format_usb format_esp

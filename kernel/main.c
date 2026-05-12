@@ -90,7 +90,7 @@ int main(uint32_t mb2_info_phys) {
     // font_draw_char(400, 0, 'A', GOP_BLU, GOP_GRN);
     console_init();
     cprintf("--- Console Testing ---\n");
-    // cprintf("Screen size: %d x %d\n", g_console.max_cols, g_console.max_rows);
+    // cprintf("Screen size: %d x %d\n", cons.max_cols, cons.max_rows);
     cprintf("Magic Num: 0x%x\n", 0xDEADBEAF);
     cprintf("Hello %s\n", "World from amd64");
     serial_puts("Bye\n");

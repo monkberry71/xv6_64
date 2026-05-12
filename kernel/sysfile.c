@@ -223,3 +223,11 @@ int64_t sys_chdir(void) {
     return 0;
 }
 
+int64_t exec(char *path, char **argv);
+int64_t sys_exec(void) {
+    char *path = (void*) myproc()->rp->rdi;
+    char **argv = (void*) myproc()->rp->rsi;
+
+    return exec(path, argv);
+}
+

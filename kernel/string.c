@@ -36,3 +36,9 @@ char* strncpy(char *s, const char *t, int n) {
     while(n-->0) *s++ = 0;
     return os;
 }
+
+int strlen(char *s) {
+    char *p = s;
+    while(*p) p++;
+    return p - s;
+}

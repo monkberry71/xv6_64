@@ -1,0 +1,83 @@
+format elf64
+
+section ".text"
+
+SYS_fork   equ 1
+SYS_exit   equ 2
+SYS_wait   equ 3
+SYS_pipe   equ 4
+SYS_read   equ 5
+SYS_kill   equ 6
+SYS_exec   equ 7
+SYS_fstat  equ 8
+SYS_chdir  equ 9
+SYS_dup    equ 10
+SYS_getpid equ 11
+SYS_sbrk   equ 12
+SYS_sleep  equ 13
+SYS_uptime equ 14
+SYS_open   equ 15
+SYS_write  equ 16
+SYS_mknod  equ 17
+SYS_unlink equ 18
+SYS_link   equ 19
+SYS_mkdir  equ 20
+SYS_close  equ 21
+SYS_draw   equ 22
+
+macro SYSCALL syscall_name {
+    public syscall_name
+    syscall_name:
+        mov r10, rcx
+        mov rax, SYS_#syscall_name
+        syscall
+        ret
+}
+
+SYSCALL fork
+SYSCALL exit
+SYSCALL wait
+SYSCALL pipe
+SYSCALL read
+SYSCALL kill
+SYSCALL exec
+SYSCALL fstat
+SYSCALL chdir
+SYSCALL dup
+SYSCALL getpid
+SYSCALL sbrk
+SYSCALL sleep
+SYSCALL uptime
+SYSCALL open
+SYSCALL write
+SYSCALL mknod
+SYSCALL unlink
+SYSCALL link
+SYSCALL mkdir
+SYSCALL close
+SYSCALL draw
+
+
+; extrn all_traps
+; public vectors
+; macro vector num {
+;     public vector#num
+;     vector#num:
+;         if ~ num in <8,10,11,12,13,14,17>
+;             push 0
+;         end if
+;         push num
+;         jmp all_traps
+
+; }
+; section ".text"
+; use64
+; rept 256 num:0 {
+;     vector num
+; }
+
+; section ".data"
+; vectors:
+;     rept 256 num:0 {
+;         dq vector#num
+;     }
