@@ -38,8 +38,8 @@ struct inode {
 };
 
 struct dev_sw {
-    int (*read)(struct inode*, uint8_t*, uint64_t);
-    int (*write)(struct inode*, uint8_t*, uint64_t);
+    int64_t (*read)(struct inode*, uint8_t*, uint64_t);
+    int64_t (*write)(struct inode*, uint8_t*, uint64_t);
 };
 
 extern struct dev_sw devs[];
@@ -51,4 +51,4 @@ void file_close(struct file *f);
 struct file* file_alloc(void);
 int file_stat(struct file *f, struct stat *st) ;
 
-#define CONSOLE 1
+#define CONSOLE_DEVNUM 1

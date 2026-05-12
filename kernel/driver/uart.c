@@ -2,6 +2,8 @@
 #include "../io.h"
 #define COM1 0x3F8
 
+// https://wiki.osdev.org/Serial_Ports
+
 int init_serial() {
    outb(COM1 + 1, 0x00);    // Disable all interrupts
    outb(COM1 + 3, 0x80);    // Enable DLAB (set baud rate divisor)
@@ -34,17 +36,17 @@ void serial_putc(char a) {
    outb(COM1,a);
 }
 void serial_puts(const char *s) {
-    while (*s) serial_putc(*s++);
+   while (*s) serial_putc(*s++);
 }
 
 void serial_hex(uint64_t v) {
-    char buf[17];
-    buf[16] = 0;
-    for(int i = 15; i >= 0; i--) {
-        buf[i] = "0123456789abcdef"[v & 0xf];
-        v >>= 4;
-    }
-    serial_puts(buf);
+   char buf[17];
+   buf[16] = 0;
+   for(int i = 15; i >= 0; i--) {
+      buf[i] = "0123456789abcdef"[v & 0xf];
+      v >>= 4;
+   }
+   serial_puts(buf);
 }
 
 // void serial_init(void) {

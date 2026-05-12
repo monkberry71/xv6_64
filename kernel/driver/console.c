@@ -3,6 +3,9 @@
 #include "../gop.h"
 #include "console.h"
 #include <stdarg.h>
+#include "../params.h"
+#include "../file.h"
+#include "../debug.h"
 
 
 void font_draw_char(uint64_t x, uint64_t y, char c, uint64_t fg, uint64_t bg) {
@@ -17,34 +20,34 @@ void font_draw_char(uint64_t x, uint64_t y, char c, uint64_t fg, uint64_t bg) {
     }
 }
 
-struct console g_console;
+struct console cons;
 
 void console_redraw_all() {
     gop_draw_rect(0,0, 
-        g_console.gop_fb->width,
-        g_console.gop_fb->height,
-        g_console.bg
+        cons.gop_fb->width,
+        cons.gop_fb->height,
+        cons.bg
     );
 
-    for(int y=0; y < g_console.max_rows; y++) {
-        for(int x=0; x < g_console.max_cols; x++) {
-            char c = g_console.buffer[y][x];
+    for(int y=0; y < cons.max_rows; y++) {
+        for(int x=0; x < cons.max_cols; x++) {
+            char c = cons.buffer[y][x];
             if (c != ' ' && c != 0) {
-                font_draw_char(x*g_console.font_w,y*g_console.font_h, c, g_console.fg, g_console.bg);
+                font_draw_char(x*cons.font_w,y*cons.font_h, c, cons.fg, cons.bg);
             }
         }
     }
 }
 
 void console_scroll() {
-    for(int y=0; y < g_console.max_rows - 1; y++) {
-        for(int x=0; x < g_console.max_cols; x++) {
-            g_console.buffer[y][x] = g_console.buffer[y+1][x];
+    for(int y=0; y < cons.max_rows - 1; y++) {
+        for(int x=0; x < cons.max_cols; x++) {
+            cons.buffer[y][x] = cons.buffer[y+1][x];
         }
     }
 
-    for(int x=0; x< g_console.max_cols; x++){
-        g_console.buffer[g_console.max_rows- 1][x] = ' ';
+    for(int x=0; x< cons.max_cols; x++){
+        cons.buffer[cons.max_rows- 1][x] = ' ';
     }
 
     console_redraw_all();
@@ -52,25 +55,25 @@ void console_scroll() {
 
 void console_putc(char c) {
     if(c == '\n') {
-        g_console.cur_x = 0;
-        g_console.cur_y++;
+        cons.cur_x = 0;
+        cons.cur_y++;
     } else if (c == '\r') {
-        g_console.cur_x = 0;
+        cons.cur_x = 0;
     } else {
-        g_console.buffer[g_console.cur_y][g_console.cur_x] = c;
-        font_draw_char(g_console.cur_x*g_console.font_w,g_console.cur_y*g_console.font_h, c, g_console.fg, g_console.bg);
-        g_console.cur_x++;
+        cons.buffer[cons.cur_y][cons.cur_x] = c;
+        font_draw_char(cons.cur_x*cons.font_w,cons.cur_y*cons.font_h, c, cons.fg, cons.bg);
+        cons.cur_x++;
     }
     
     // next line
-    if(g_console.cur_x >= g_console.max_cols) {
-        g_console.cur_x = 0;
-        g_console.cur_y++;
+    if(cons.cur_x >= cons.max_cols) {
+        cons.cur_x = 0;
+        cons.cur_y++;
     }
     
-    if(g_console.cur_y >= g_console.max_rows) {
+    if(cons.cur_y >= cons.max_rows) {
         console_scroll();
-        g_console.cur_y = g_console.max_rows - 1;
+        cons.cur_y = cons.max_rows - 1;
     }
 }
 
@@ -101,7 +104,9 @@ static void print_int(int xx, int base, int sign) {
 
 void cprintf(char *fmt, ...) {
     va_list ap;
-    if(fmt == 0) return;
+    if(fmt == 0) panic("null fmt");
+
+    if(cons.locking) acquire(&cons.lk);
     
     int c;
     va_start(ap, fmt);
@@ -144,26 +149,54 @@ void cprintf(char *fmt, ...) {
             }
         }
     }
+    if(cons.locking) release(&cons.lk);
     va_end(ap);
+
 }
 
+int64_t console_write(struct inode* ip, uint8_t *buf, int64_t n) {
+    iunlock(ip);
+    acquire(&cons.lk);
+    int64_t i;
+    for(i=0; i < n; i++) {
+        console_putc(buf[i] & 0xFF);
+    }
+    release(&cons.lk);
+    ilock(ip);
+
+    return i;
+}
+
+int64_t console_read(struct inode* ip, uint8_t *dst, int64_t n) {
+    return n;
+}
+
+extern struct dev_sw devs[NDEV];
 void console_init(void) {
+
+    init_lock(&cons.lk, "console");
     
-    g_console.gop_fb = &gop_fb;
+    cons.gop_fb = &gop_fb;
 
-    g_console.font_w = 8;
-    g_console.font_h = 16;
+    cons.font_w = 8;
+    cons.font_h = 16;
 
-    g_console.max_cols = g_console.gop_fb->width / g_console.font_w;
-    g_console.max_rows = g_console.gop_fb->height / g_console.font_h;
+    cons.max_cols = cons.gop_fb->width / cons.font_w;
+    cons.max_rows = cons.gop_fb->height / cons.font_h;
 
-    g_console.cur_y = 0;
-    g_console.cur_x = 0;
+    cons.cur_y = 0;
+    cons.cur_x = 0;
 
-    g_console.fg = GOP_WHI;
-    g_console.bg = GOP_BLK;
+    cons.fg = GOP_WHI;
+    cons.bg = GOP_BLK;
 
-    g_console.pixels_per_scanline = g_console.gop_fb->pitch / (g_console.gop_fb->bpp / 8);
+    cons.pixels_per_scanline = cons.gop_fb->pitch / (cons.gop_fb->bpp / 8);
     // pitch means byte per row
     
+    devs[CONSOLE_DEVNUM].write = console_write;
+    devs[CONSOLE_DEVNUM].read = console_read;
+    cons.locking = 1;
+
 }
+
+

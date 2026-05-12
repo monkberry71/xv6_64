@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include "../gop.h"
+#include "../spinlock.h"
 
 #define MAX_COLS 256
 #define MAX_ROWS 128
@@ -20,6 +21,9 @@ struct console {
     uint64_t pixels_per_scanline;
 
     int font_w, font_h;
+
+    struct spin_lock lk;
+    int locking;
 };
 
 void console_putc(char c);
