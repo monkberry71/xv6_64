@@ -60,10 +60,6 @@ use64
 
     mov rdi, rsp
     call syscall_dispatch
-    ; stack -->
-    ; r15 ... r10 ... rax
-
-    mov [rsp + 14 * 8], rax; return val to rax
 syscall_ret:
 
     popaq
