@@ -251,6 +251,15 @@ int main(void) {
     }
     dir_link(rooti, "init", init_ino);
 
+    int sh_ino = dialloc(T_FILE);
+    struct dinode *sh = &inodes[sh_ino];
+    sh->nlink = 1;
+    if( file2i(sh, "user/sh") < 0 ) {
+        fprintf(stderr, "file2i sh failed");
+        exit(1);
+    }
+    dir_link(rooti, "sh", sh_ino);
+
 
 
     save_img();

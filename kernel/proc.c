@@ -7,6 +7,7 @@
 #include "kalloc.h"
 #include "debug.h"
 #include "memlayout.h"
+#include "fs.h"
 
 struct {
     struct spin_lock lock;
@@ -367,6 +368,11 @@ int64_t fork(void) {
     new_p->rp->rax = 0; // return value must be zero.
 
     //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! open file dup
+    for(int i=0; i < NOFILE; i++) {
+        if(cur_p->ofile[i])
+            new_p->ofile[i] = file_dup(cur_p->ofile[i]);
+    }
+    new_p->cwd = idup(cur_p->cwd);
 
     safe_strcpy(new_p->name, cur_p->name, sizeof(cur_p->name));
     
@@ -425,6 +431,17 @@ void exit(void) {
     }
 
     // !!!!!!!!!close all open file
+    for(int fd=0; fd < NOFILE; fd++) {
+        if(curp->ofile[fd]) {
+            file_close(curp->ofile[fd]);
+            curp->ofile[fd] = 0;
+        }
+    }
+
+    if(curp->cwd) {
+        iput(curp->cwd);
+        curp->cwd = 0;
+    }
 
     acquire(&ptable.lock);
 

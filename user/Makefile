@@ -3,7 +3,7 @@ AS = fasm
 LD = ld
 
 BUILD_DIR ?= ../build/user
-ULIB = $(BUILD_DIR)/usys.o
+ULIB = $(BUILD_DIR)/usys.o $(BUILD_DIR)/ulib.o
 
 CFLAGS = -m64 \
 -ffreestanding \
@@ -16,7 +16,7 @@ CFLAGS = -m64 \
 LDFLAGS = -m elf_x86_64 \
 -nostdlib \
 
-UPROGS = init
+UPROGS = init sh
 
 all: $(BUILD_DIR)/initcode $(UPROGS:%=$(BUILD_DIR)/%)
 

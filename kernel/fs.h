@@ -80,5 +80,6 @@ struct inode* dir_lookup(struct inode *dp, char *name, uint64_t *poff);
 int dir_link(struct inode *dp, char *name, uint64_t inum);
 struct inode* ialloc(uint64_t dev, short type);
 void iupdate(struct inode *ip);
+struct inode* idup(struct inode *ip);
 
 void fs_init(uint64_t dev) ;
