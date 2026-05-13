@@ -87,14 +87,12 @@ int main(uint32_t mb2_info_phys) {
 
     fs_init(ROOTDEV);
     mknod_con();
-    // struct inode *rooti = namei("/");
-    // if(rooti == 0) panic("wtf no root");
-    // ilock(rooti);
-    // cprintf("root type=%d size=%d\n", rooti->type, rooti->size);
-    // iunlock(rooti);
-    // iput(rooti);
+    struct inode *rooti = namei("/");
+    if(rooti == 0) panic("wtf no root");
+    ilock(rooti);
+    cprintf("root type=%d size=%d\n", rooti->type, rooti->size);
+    iunlock(rooti);
+    iput(rooti);
     // basic scheduler
-
-    
     scheduler();
 }

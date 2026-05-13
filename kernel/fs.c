@@ -520,5 +520,6 @@ void mkfs(uint64_t dev) {
 void fs_init(uint64_t dev) {
     // use this when using rd
     iinit(dev);
-    mkfs(dev);
+    read_sb(dev, &sb);
+    // mkfs(dev);
 }

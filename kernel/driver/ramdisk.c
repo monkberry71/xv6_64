@@ -1,13 +1,17 @@
 #include <stdint.h>
 #include "../fs.h"
-#include "string.h"
+#include "../string.h"
+#include "../debug.h"
 
-static uint8_t ramdisk[DISK_SIZE];
-
+static uint8_t *ramdisk;
 static uint64_t disk_size;
 
 void rd_init(void) {
-    disk_size = DISK_SIZE;
+    extern uint8_t _binary_build_fs_img_start[];
+    extern uint8_t _binary_build_fs_img_size[];
+
+    ramdisk = _binary_build_fs_img_start;
+    disk_size = (uint64_t)_binary_build_fs_img_size;
 }
 
 void rd_intr(void) {
@@ -25,7 +29,7 @@ void rd_rw(struct buf *b) {
         panic("rd_rw: request not for rd");
     }
 
-    if(b->block_no >= disk_size) {
+    if(b->block_no >= disk_size/BSIZE) {
         panic("rd_rw: block out of range");
     }
 

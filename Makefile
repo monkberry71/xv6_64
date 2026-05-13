@@ -15,17 +15,18 @@ LDFLAGS = -m elf_x86_64 \
 -nostdlib \
 -T kernel/linker.ld
 
+.PHONY: run clean debug format_usb format_esp user
 # USERS = build/user/initcode.o
 
 # build/user/%.o: user/%.asm
 # 	@mkdir -p build/user
 # 	$(AS) $(ASFLAGS) $< $@
 
-build/user/initcode.out: build/user/initcode.o
-	$(LD) -nostdlib -N -e _start -Ttext 0 -o $@ $<
+# build/user/initcode.out: build/user/initcode.o
+# 	$(LD) -nostdlib -N -e _start -Ttext 0 -o $@ $<
 
-build/user/initcode: build/user/initcode.out
-	objcopy -S -O binary $< $@
+# build/user/initcode: build/user/initcode.out
+# 	objcopy -S -O binary $< $@
 
 OBJS = build/main.o build/entry.o build/uart.o build/string.o build/bump.o build/mb2.o \
 build/debug.o build/vm.o build/kalloc.o build/mp.o build/vectors.o build/trap_asm.o build/trap.o \
@@ -34,7 +35,7 @@ build/syscall_entry.o build/sysproc.o build/bio.o build/ramdisk.o build/sleeploc
 build/console.o build/sysfile.o build/file.o build/fs.o build/exec.o
 GRUB_MODULES = part_gpt fat normal multiboot2 all_video
 
-.PHONY: run clean debug format_usb format_esp
+
 
 build/%.o: kernel/%.asm
 	@mkdir -p build
@@ -50,8 +51,26 @@ build/%.o: kernel/driver/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 
-build/kernel.elf: $(OBJS) build/user/initcode
-	$(LD) $(LDFLAGS) $(OBJS) --oformat elf64-x86-64 -b binary build/user/initcode -o $@ 
+# user
+# USER_PROGS = build/user/_init
+
+user:
+	$(MAKE) -C user
+
+build/mkfs: tools/mkfs.c
+	@mkdir -p build
+	gcc -Wall -Wextra -g $< -o $@
+
+build/fs.img: build/mkfs user
+	cd build && ./mkfs
+
+
+build/kernel.elf: $(OBJS) user build/fs.img
+	$(LD) $(LDFLAGS) $(OBJS) \
+		--oformat elf64-x86-64 \
+		-b binary build/user/initcode \
+		-b binary build/fs.img \
+		-o $@ 
 
 build/BOOTX64.EFI: grub/grub.cfg
 	@mkdir -p build
@@ -109,5 +128,3 @@ debug: format_usb
 	-accel tcg
 clean:
 	rm -rf build/
-
-

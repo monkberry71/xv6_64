@@ -6,6 +6,7 @@
 #include "../params.h"
 #include "../file.h"
 #include "../debug.h"
+#include "../fs.h"
 
 
 void font_draw_char(uint64_t x, uint64_t y, char c, uint64_t fg, uint64_t bg) {
@@ -154,7 +155,7 @@ void cprintf(char *fmt, ...) {
 
 }
 
-int64_t console_write(struct inode* ip, uint8_t *buf, int64_t n) {
+int64_t console_write(struct inode* ip, uint8_t *buf, uint64_t n) {
     iunlock(ip);
     acquire(&cons.lk);
     int64_t i;
@@ -167,7 +168,7 @@ int64_t console_write(struct inode* ip, uint8_t *buf, int64_t n) {
     return i;
 }
 
-int64_t console_read(struct inode* ip, uint8_t *dst, int64_t n) {
+int64_t console_read(struct inode* ip, uint8_t *dst, uint64_t n) {
     return n;
 }
 

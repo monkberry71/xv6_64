@@ -418,7 +418,7 @@ int copy_out(pte_t *pml4, uint64_t va, void* p, uint64_t len) {
     char *buf = p;
     while(len > 0) {
         uint64_t va0 = ROUNDDOWN(va, PGSIZE_4KB);
-        uint64_t pa0 = uva2dma(pml4, (void*)va0);
+        uint64_t pa0 = (uint64_t) uva2dma(pml4, (void*)va0);
         if(!pa0) return -1;
 
         // va0 --- va ---- (va0 + 4kb)
@@ -429,7 +429,7 @@ int copy_out(pte_t *pml4, uint64_t va, void* p, uint64_t len) {
         // va0 --- va ---- (va0 + 4kb)
         //          <- to_write ->
 
-        memcpy(pa0 + (va - va0), buf, to_write);
+        memcpy((void*)(pa0 + (va - va0)), buf, to_write);
         len -= to_write;
         buf += to_write;
         va = va0 + PGSIZE_4KB;

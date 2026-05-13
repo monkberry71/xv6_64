@@ -6,7 +6,7 @@
 
 #define ROOTINO 1 // root dir inode
 #define BSIZE 4096
-#define DISK_SIZE (16 * 1024 * 1024)
+#define DISK_SIZE (16 * 1024 * 1024) // 16*2^20 == 16MB
 #define NBLOCKS (DISK_SIZE / BSIZE)
 
 #define B_VALID 0x2

@@ -344,7 +344,7 @@ void wakeup(void* chan) {
     release(&ptable.lock);
 }
 
-uint64_t fork(void) {
+int64_t fork(void) {
     struct proc *new_p = alloc_proc();
     struct proc *cur_p = myproc();
 
@@ -378,7 +378,7 @@ uint64_t fork(void) {
     return pid;
 }
 
-uint64_t wait(void) {
+int64_t wait(void) {
     struct proc *curp = myproc();
 
     acquire(&ptable.lock);
