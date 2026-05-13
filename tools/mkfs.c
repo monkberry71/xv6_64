@@ -23,6 +23,9 @@
 
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
+#define CONSOLE_DEVNUM 1
+
+
 struct super_block {
     uint64_t size; // Size of fs image (in blocks)
     uint64_t n_blocks; // num of data blocks
@@ -231,6 +234,13 @@ int main(void) {
     dir_link(rooti, ".", ROOTINO);
     dir_link(rooti, "..", ROOTINO);
 
+    int console_ino = dialloc(T_DEV);
+    struct dinode *console = &inodes[console_ino];
+    console->nlink = 1;
+    console->major = 1;
+    console->minor = 1;
+    dir_link(rooti, "console", console_ino);
+
     // add init elf
     int init_ino = dialloc(T_FILE);
     struct dinode *init = &inodes[init_ino];
@@ -240,6 +250,8 @@ int main(void) {
         exit(1);
     }
     dir_link(rooti, "init", init_ino);
+
+
 
     save_img();
 
