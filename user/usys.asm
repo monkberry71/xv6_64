@@ -36,14 +36,29 @@ macro SYSCALL syscall_name {
 
 SYSCALL fork
 SYSCALL exit
-SYSCALL wait
+; SYSCALL wait ;ok wait is reserved in fasm
+; SYSCALL sys_wait
+public sys_wait
+sys_wait:
+    mov r10, rcx
+    mov rax, SYS_wait
+    syscall
+    ret
+
 SYSCALL pipe
 SYSCALL read
 SYSCALL kill
 SYSCALL exec
 SYSCALL fstat
 SYSCALL chdir
-SYSCALL dup
+; SYSCALL dup ; dup too
+public sys_dup
+sys_dup:
+    mov r10, rcx
+    mov rax, SYS_dup
+    syscall
+    ret
+
 SYSCALL getpid
 SYSCALL sbrk
 SYSCALL sleep

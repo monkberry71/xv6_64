@@ -128,6 +128,7 @@ int64_t exec(char *path, char **argv) {
     safe_strcpy(cur_p->name, last, sizeof(cur_p->name));
 
     pte_t *old_pml4 = cur_p->pml4;
+    uint64_t old_sz = cur_p->sz;
     cur_p->pml4 = pml4;
     cur_p->sz = sz;
     cur_p->rp->rcx = elf.entry; // main
@@ -137,17 +138,14 @@ int64_t exec(char *path, char **argv) {
     cur_p->rp->rsi = stack_pointer + 16; // argv addr
 
     switch_uvm(cur_p);
-    free_vm(old_pml4);
+    free_vm(old_pml4, old_sz);
     return 0;
-
-    
-    
     // echo hi
     // st ->
     // argc - argv[0] - argv[1] - NULL - "hi\0" - "echo\0"
 
     bad:
-        if(pml4) free_vm(pml4);
+        if(pml4) free_vm(pml4, sz);
         if(ip) {
             iunlock(ip);
             iput(ip);

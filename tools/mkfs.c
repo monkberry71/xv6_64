@@ -67,15 +67,13 @@ int balloc(void) {
     return bump++;
 }
 
-
-void* dialloc(short type) {
+struct dinode* inodes = (void*) &disk[3];
+int dialloc(short type) {
     static int bump = 1; // root inode
-    struct dinode* inodes = (void*) &disk[3];
     
     struct dinode* to_alloc = &inodes[bump];
     to_alloc->type = type;
-    bump++;
-    return to_alloc;
+    return bump++;
 }
 
 uint64_t bmap(struct dinode *ip, uint64_t bn) {
@@ -171,6 +169,39 @@ int dir_link(struct dinode *dp, char *name, uint64_t inum) {
     return 0;
 }
 
+int file2i(struct dinode *ip, char* file_name_on_host) {
+    if(ip->type != T_FILE) return -1;
+
+    FILE *f = fopen(file_name_on_host, "rb");
+    if(f == 0) return -1;
+
+    char buf[BSIZE];
+    uint64_t off = 0;
+
+    for(;;) {
+        uint64_t n = fread(buf, 1, sizeof(buf), f);
+        if(n > 0) {
+            if(writei(ip, buf, off, n) != (int64_t) n) {
+                fclose(f);
+                return -1;
+            }
+            off += n;
+        }
+
+        if(n < sizeof(buf)) {
+            if(ferror(f)) {
+                fclose(f);
+                return -1;
+            }
+            break;
+        }
+
+    }
+    fclose(f);
+    return 0;
+    
+}
+
 int save_img() {
     FILE *f = fopen("fs.img", "wb");
     if(f == 0){
@@ -192,20 +223,23 @@ int main(void) {
 
     // | zero | sb | bmap | inode0 | inode1 | inode2 | data blocks ... 
 
-    disk[sb->bmap_start].bytes[0] = (1 << 6) - 1;
+    disk[sb->bmap_start].bytes[0] = (1 << 6) - 1; // check bitmap
 
-    // struct dinode *rooti = (void*) &disk[BSIZE * sb->inode_start + sizeof(struct dinode)];
-
-    // rooti->type = T_DIR;
-    // rooti->major = 0;
-    // rooti->minor = 0;
-    // rooti->nlink = 1; // .
-
-    struct dinode *rooti = dialloc(T_DIR);
+    // make root dir inode
+    struct dinode *rooti = &inodes[dialloc(T_DIR)];
     rooti->nlink = 1;
-
     dir_link(rooti, ".", ROOTINO);
     dir_link(rooti, "..", ROOTINO);
+
+    // add init elf
+    int init_ino = dialloc(T_FILE);
+    struct dinode *init = &inodes[init_ino];
+    init->nlink = 1;
+    if( file2i(init, "user/init") < 0 ) {
+        fprintf(stderr, "file2i init failed");
+        exit(1);
+    }
+    dir_link(rooti, "init", init_ino);
 
     save_img();
 

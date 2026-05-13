@@ -1,4 +1,4 @@
-#include <stdint.h>W
+#include <stdint.h>
 
 struct stat;
 struct rtcdate;
@@ -6,7 +6,10 @@ struct rtcdate;
 // system calls
 int64_t fork(void);
 int64_t exit(void) __attribute__((noreturn));
-int64_t wait(void);
+int64_t sys_wait(void);
+static inline int64_t wait(void) {
+    return sys_wait();
+}
 int64_t pipe(int*);
 int64_t write(int, const void*, int64_t);
 int64_t read(int, void*, int64_t);
@@ -20,7 +23,10 @@ int64_t fstat(int fd, struct stat*);
 int64_t link(const char*, const char*);
 int64_t mkdir(const char*);
 int64_t chdir(const char*);
-int64_t dup(int);
+int64_t sys_dup(int);
+static inline int64_t dup(int fd) {
+    return sys_dup(fd);
+}
 int64_t getpid(void);
 char* sbrk(int);
 int64_t sleep(int);

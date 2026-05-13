@@ -327,11 +327,13 @@ static void free_entry(pte_t *table, int lv) {
 }
 
 // free a page tables itselves
-void free_vm(pte_t *pml4) {
+// sz is old sz
+void free_vm(pte_t *pml4, uint64_t sz) {
     if(pml4 == 0) {
         panic("free_vm: no pml4");
     }
-    dealloc_uvm(pml4, USER_TOP, 0);
+    // dealloc_uvm(pml4, USER_TOP, 0); <<<< very slow
+    dealloc_uvm(pml4, sz, 0);
 
     // lv = 0 pml4
     // lv = 1 pdpt
@@ -344,7 +346,8 @@ pte_t* copy_uvm(pte_t *pml4, uint64_t sz) {
     pte_t *new_pml4 = setup_uvm();
     if(new_pml4 == 0) return 0;
 
-    for(uint64_t addr = 0; addr < sz; addr += PGSIZE_4KB) {
+    uint64_t addr;
+    for(addr = 0; addr < sz; addr += PGSIZE_4KB) {
         pte_t *pte = walk_pml4(pml4, (void*) addr, 0);
         if(pte == 0) {
             panic("copy_uvm: pte should exist");
@@ -367,7 +370,7 @@ pte_t* copy_uvm(pte_t *pml4, uint64_t sz) {
     }
     return new_pml4;
     bad:
-        free_vm(new_pml4);
+        free_vm(new_pml4, addr);
         return 0;
 }
 

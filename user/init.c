@@ -12,4 +12,5 @@ int main(void) {
     dup(0);
 
     write(1, "init", 5);
+    for(;;);
 }

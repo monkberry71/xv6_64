@@ -11,14 +11,14 @@ CFLAGS = -m64 \
 -fno-pic \
 -fno-pie \
 -mno-red-zone \
--mcmodel=kernel \
 -g
 
 LDFLAGS = -m elf_x86_64 \
 -nostdlib \
--T kernel/linker.ld
 
-all: $(BUILD_DIR)/initcode
+UPROGS = init
+
+all: $(BUILD_DIR)/initcode $(UPROGS:%=$(BUILD_DIR)/%)
 
 
 # $(UPROGS:%=$(BUILD_DIR)/%)
@@ -45,5 +45,5 @@ $(BUILD_DIR)/initcode: $(BUILD_DIR)/initcode.out
 # build/user/initcode.out: build/user/initcode.o
 # 	$(LD) -nostdlib -N -e _start -Ttext 0 -o $@ $<
 
-$(BUILD_DIR)/_% : $(BUILD_DIR)/%.o $(ULIB)
+$(BUILD_DIR)/% : $(BUILD_DIR)/%.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^

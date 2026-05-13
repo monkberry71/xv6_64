@@ -395,7 +395,7 @@ int64_t wait(void) {
                 kfree(p->kstack);
                 p->kstack = 0;
 
-                free_vm(p->pml4);
+                free_vm(p->pml4, p->sz);
                 p->pid = 0;
                 p->parent = 0;
                 p->name[0] = 0;
