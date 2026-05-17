@@ -11,10 +11,8 @@ int main(void) {
     dup(0); // stdout 1
     dup(0); // stderr 2
 
-    write(1, "init", 5);
+    // write(1, "init", 5);
 
-    if(fork() == 0) 
-        exec("/sh", argv);
     for(;;) {
         printf(1, "init: starting sh\n");
         int pid = fork();

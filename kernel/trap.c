@@ -26,8 +26,8 @@ void idt_init(void) {
 }
 
 void trap(struct trap_frame *tf) {
-    serial_hex(tf->trap_no);
-    serial_putc('\n');
+    // serial_hex(tf->trap_no);
+    // serial_putc('\n');
     if(tf->trap_no == T_PGFLT) {
         uint64_t fault_addr;
         __asm__ volatile("movq %%cr2, %0" : "=r"(fault_addr));
