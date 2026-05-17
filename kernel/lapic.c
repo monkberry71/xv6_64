@@ -47,16 +47,21 @@ static void lapicw(uint64_t index, uint64_t value) {
     lapic[ID];
 }
 
+int lapic_id(void) {
+  if (!lapic) return 0;
+  return lapic[ID] >> 24;
+}
+
 void lapic_init(void) {
     uint64_t apic_base = rdmsr(IA32_APIC_BASE_MSR);
-    mycpu()->lapic_id = apic_base;
     if( !(apic_base & IA32_APIC_BASE_MSR_ENABLE) ){
-        wrmsr(IA32_APIC_BASE_MSR, apic_base | IA32_APIC_BASE_MSR_ENABLE);
+      wrmsr(IA32_APIC_BASE_MSR, apic_base | IA32_APIC_BASE_MSR_ENABLE);
     }
-
+    
     apic_base &= ~0xFFFULL;
-
+    
     lapic = io_remap((void*)apic_base, PGSIZE_4KB);
+    mycpu()->lapic_id = lapic_id();
     
     lapicw(SVR, ENABLE | (T_IRQ0 + IRQ_SPURIOUS));
 

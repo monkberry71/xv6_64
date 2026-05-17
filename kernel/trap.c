@@ -8,6 +8,7 @@
 #include "lapic.h"
 #include "gop.h"
 #include "proc.h"
+#include "driver/kbd.h"
 
 struct gate_desc idt[256];
 extern uint64_t vectors[256];
@@ -35,6 +36,10 @@ void trap(struct trap_frame *tf) {
     }
     if(tf->trap_no == T_IRQ0 + IRQ_TIMER) {
 
+        lapic_eoi();
+    }
+    if(tf->trap_no == T_IRQ0 + IRQ_KBD) {
+        kbd_intr();
         lapic_eoi();
     }
     if(tf->trap_no == T_DBLFLT) {

@@ -11,6 +11,7 @@
 #include "trap.h"
 #include "gop.h"
 #include "lapic.h"
+#include "ioapic.h"
 #include "proc.h"
 #include "params.h"
 #include "cpu.h"
@@ -18,6 +19,7 @@
 #include "bio.h"
 #include "driver/ramdisk.h"
 #include "driver/console.h"
+#include "driver/kbd.h"
 #include "fs.h"
 
 void proc_a(void) {
@@ -73,12 +75,14 @@ int main(uint32_t mb2_info_phys) {
     idt_init();
     gop_init();
     lapic_init();
+    ioapic_init();
     process_init();
     user_init();
     syscall_init();
     rd_init();
     bcache_init();
     console_init();
+    kbd_init();
     cprintf("--- Console Testing ---\n");
     // cprintf("Screen size: %d x %d\n", cons.max_cols, cons.max_rows);
     cprintf("Magic Num: 0x%x\n", 0xDEADBEAF);

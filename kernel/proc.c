@@ -422,6 +422,8 @@ int64_t wait(void) {
 
         sleep(curp, &ptable.lock);
     }
+
+    // it is just a condition variable while loop, but the condition is too big, we use for
 }
 
 void exit(void) {
