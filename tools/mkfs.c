@@ -251,6 +251,7 @@ int main(void) {
     }
     dir_link(rooti, "init", init_ino);
 
+    // add sh elf
     int sh_ino = dialloc(T_FILE);
     struct dinode *sh = &inodes[sh_ino];
     sh->nlink = 1;
@@ -259,6 +260,16 @@ int main(void) {
         exit(1);
     }
     dir_link(rooti, "sh", sh_ino);
+
+    // add cat
+    int cat_ino = dialloc(T_FILE);
+    struct dinode *cat = &inodes[cat_ino];
+    cat->nlink = 1;
+    if( file2i(cat, "user/cat") < 0 ) {
+        fprintf(stderr, "file2i cat failed");
+        exit(1);
+    }
+    dir_link(rooti, "cat", cat_ino);
 
 
 

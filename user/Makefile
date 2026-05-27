@@ -16,7 +16,7 @@ CFLAGS = -m64 \
 LDFLAGS = -m elf_x86_64 \
 -nostdlib \
 
-UPROGS = init sh
+UPROGS = init sh cat
 
 all: $(BUILD_DIR)/initcode $(UPROGS:%=$(BUILD_DIR)/%)
 
