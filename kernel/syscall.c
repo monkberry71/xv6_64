@@ -46,7 +46,7 @@ extern int64_t sys_open(void);
 extern int64_t sys_read(void);
 // extern int64_t sys_sbrk(void);
 // extern int64_t sys_sleep(void);
-// extern int64_t sys_unlink(void);
+extern int64_t sys_unlink(void);
 extern int64_t sys_wait(void);
 extern int64_t sys_write(void);
 // extern int64_t sys_uptime(void);
@@ -71,7 +71,7 @@ static syscall_func syscalls[] = {
     [SYS_open]    =sys_open,
     [SYS_write]   =sys_write,
     [SYS_mknod]   =sys_mknod,
-    // [SYS_unlink]  =sys_unlink,
+    [SYS_unlink]  =sys_unlink,
     // [SYS_link]    =sys_link,
     [SYS_mkdir]   =sys_mkdir,
     [SYS_close]   =sys_close,

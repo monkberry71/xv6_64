@@ -4,6 +4,7 @@
 #include "params.h"
 #include "fs.h"
 #include "debug.h"
+#include "string.h"
 
 #define CHECKFD(fd) if((fd) < 0 || (fd) >= NOFILE || (myproc()->ofile[(fd)]) == 0) return -1
 
@@ -238,5 +239,73 @@ int64_t sys_exec(void) {
     char **argv = (void*) myproc()->rp->rsi;
 
     return exec(path, argv);
+}
+
+static int is_dir_empty(struct inode *dp) {
+    for(int off = 2 * sizeof(struct dir_ent); off < dp->size; off += sizeof(struct dir_ent)) {
+        // skip ".", ".."
+        struct dir_ent de;
+        if(readi(dp, (char*) &de, off, sizeof(struct dir_ent)) != sizeof(struct dir_ent)) {
+            panic("is_dir_empty: cannot read");
+        }
+        if(de.inum != 0) return 0;
+    }
+    return 1;
+}
+
+int64_t sys_unlink(void) {
+    char *path = (void*) myproc()->rp->rdi;
+    
+    char name[DIRSIZ];
+    struct inode *dp = namei_parent(path, name);
+    if(dp == 0) return -1;
+
+    ilock(dp);
+
+    if(strncmp(name, ".", DIRSIZ) == 0 || strncmp(name, "..", DIRSIZ) == 0) 
+        goto bad;
+    
+    uint64_t off;
+    struct inode *ip = dir_lookup(dp, name, &off);
+    if(ip == 0) 
+        goto bad;
+    ilock(ip);
+
+    if(ip->nlink < 1) {
+        panic("unlink: nlink < 1");
+    }
+
+    if(ip->type == T_DIR && !is_dir_empty(ip)) {
+        iunlock(ip);
+        iput(ip);
+        goto bad;
+    }
+
+    struct dir_ent de;
+    memset(&de, 0, sizeof(de));
+    if(writei(dp, (char*)&de, off, sizeof(struct dir_ent)) != sizeof(struct dir_ent)) {
+        panic("unlink: writei");
+    }
+
+    if(ip->type == T_DIR) {
+        // ip's .. is dp
+        dp->nlink--;
+        iupdate(dp);
+    }
+
+    iunlock(dp);
+    iput(dp);
+
+    ip->nlink--;
+    iupdate(ip);
+    iunlock(ip);
+    iput(ip);
+
+    return 0;
+
+bad:
+    iunlock(dp);
+    iput(dp);
+    return -1;
 }
 

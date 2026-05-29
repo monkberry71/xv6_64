@@ -448,7 +448,7 @@ static struct inode* namex(char *path, int namei_parent, char *name) {
             return 0;
         }
         if(namei_parent && *path == '\0') {
-            // namei_parent is true means, we need the path's target inode's parent
+            // namei_parent true means, we need the path's target inode's parent
             // mkdir /a/b/c <- we need b's inode
             // ip -> b, path == 0, name == c, we throw away the name.
             iunlock(ip);

@@ -205,6 +205,20 @@ int file2i(struct dinode *ip, char* file_name_on_host) {
     
 }
 
+void add_file(struct dinode *rooti, char *name) {
+    int ino = dialloc(T_FILE);
+    struct dinode *ip = &inodes[ino];
+    ip->nlink = 1;
+
+    char path[128];
+    snprintf(path, sizeof(path), "user/%s", name);
+    if(file2i(ip, path) < 0) {
+        fprintf(stderr, "file2i %s failed", name);
+        exit(1);
+    }
+    dir_link(rooti, name, ino);
+}
+
 int save_img() {
     FILE *f = fopen("fs.img", "wb");
     if(f == 0){
@@ -241,59 +255,14 @@ int main(void) {
     console->minor = 1;
     dir_link(rooti, "console", console_ino);
 
-    // add init elf
-    int init_ino = dialloc(T_FILE);
-    struct dinode *init = &inodes[init_ino];
-    init->nlink = 1;
-    if( file2i(init, "user/init") < 0 ) {
-        fprintf(stderr, "file2i init failed");
-        exit(1);
-    }
-    dir_link(rooti, "init", init_ino);
-
-    // add sh elf
-    int sh_ino = dialloc(T_FILE);
-    struct dinode *sh = &inodes[sh_ino];
-    sh->nlink = 1;
-    if( file2i(sh, "user/sh") < 0 ) {
-        fprintf(stderr, "file2i sh failed");
-        exit(1);
-    }
-    dir_link(rooti, "sh", sh_ino);
-
-    // add cat
-    int cat_ino = dialloc(T_FILE);
-    struct dinode *cat = &inodes[cat_ino];
-    cat->nlink = 1;
-    if( file2i(cat, "user/cat") < 0 ) {
-        fprintf(stderr, "file2i cat failed");
-        exit(1);
-    }
-    dir_link(rooti, "cat", cat_ino);
-
-    // add mkdir
-    int mkdir_ino = dialloc(T_FILE);
-    struct dinode *mkdir = &inodes[mkdir_ino];
-    mkdir->nlink = 1;
-    if( file2i(mkdir, "user/mkdir") < 0 ) {
-        fprintf(stderr, "file2i mkdir failed");
-        exit(1);
-    }
-    dir_link(rooti, "mkdir", mkdir_ino);
-
-    // add 
-    int ls_ino = dialloc(T_FILE);
-    struct dinode *ls = &inodes[ls_ino];
-    ls->nlink = 1;
-    if( file2i(ls, "user/ls") < 0 ) {
-        fprintf(stderr, "file2i ls failed");
-        exit(1);
-    }
-    dir_link(rooti, "ls", ls_ino);
+    add_file(rooti, "init");
+    add_file(rooti, "sh");
+    add_file(rooti, "cat");
+    add_file(rooti, "mkdir");
+    add_file(rooti, "ls");
+    add_file(rooti, "rm");
 
 
     save_img();
 
 }
-
-
