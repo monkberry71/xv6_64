@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include "user.h"
+#include "fcntl.h"
 
 uint64_t strlen(const char *s) {
     int n;
@@ -89,4 +90,35 @@ void printf(int fd, const char *fmt, ...) {
     }
     va_end(ap);
 
+}
+
+int64_t stat(const char *n, struct stat *st) {
+    int fd = open(n, O_RDONLY);
+    if(fd < 0) return -1;
+    int r = fstat(fd, st);
+    close(fd);
+    return r;
+}
+
+void* memset(void* dst, int c, uint64_t n) {
+    char *p = dst;
+    while(n-- > 0) *p++ = c;
+    return dst;
+}
+
+void *memcpy(void *dst, const void *src, uint64_t n) {
+    char *d = dst, *s = src;
+    while (n--) *d++ = *s++;
+    return dst;
+}
+
+char*
+strcpy(char *s, const char *t)
+{
+  char *os;
+
+  os = s;
+  while((*s++ = *t++) != 0)
+    ;
+  return os;
 }

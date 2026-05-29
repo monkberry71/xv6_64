@@ -271,6 +271,25 @@ int main(void) {
     }
     dir_link(rooti, "cat", cat_ino);
 
+    // add mkdir
+    int mkdir_ino = dialloc(T_FILE);
+    struct dinode *mkdir = &inodes[mkdir_ino];
+    mkdir->nlink = 1;
+    if( file2i(mkdir, "user/mkdir") < 0 ) {
+        fprintf(stderr, "file2i mkdir failed");
+        exit(1);
+    }
+    dir_link(rooti, "mkdir", mkdir_ino);
+
+    // add 
+    int ls_ino = dialloc(T_FILE);
+    struct dinode *ls = &inodes[ls_ino];
+    ls->nlink = 1;
+    if( file2i(ls, "user/ls") < 0 ) {
+        fprintf(stderr, "file2i ls failed");
+        exit(1);
+    }
+    dir_link(rooti, "ls", ls_ino);
 
 
     save_img();

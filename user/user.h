@@ -35,7 +35,7 @@ int64_t uptime(void);
 // ulib.c
 int64_t stat(const char*, struct stat*);
 char* strcpy(char*, const char*);
-void *memmove(void*, const void*, int);
+void *memcpy(void*, const void*, uint64_t);
 char* strchr(const char*, char c);
 int strcmp(const char*, const char*);
 void printf(int, const char*, ...);

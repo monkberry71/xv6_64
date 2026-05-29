@@ -195,7 +195,7 @@ void user_init(void) {
     p->rp->rsp = (uint64_t) PGSIZE_4KB;
 
     safe_strcpy(p->name, "initcode", sizeof(p->name));
-    // p->cwd
+    p->cwd = namei("/");
 
     // acquire forces above writes to be visible (sync_synchronize)
     // and assignment has to be atomic
