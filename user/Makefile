@@ -46,4 +46,4 @@ $(BUILD_DIR)/initcode: $(BUILD_DIR)/initcode.out
 # 	$(LD) -nostdlib -N -e _start -Ttext 0 -o $@ $<
 
 $(BUILD_DIR)/% : $(BUILD_DIR)/%.o $(ULIB)
-	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
+	$(LD) $(LDFLAGS) -N -e main -Ttext 0x1000 -o $@ $^

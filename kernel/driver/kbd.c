@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "../io.h"
 #include "kbd.h"
-#include "../ds.h"
+#include "../fs.h"
 #include "../ioapic.h"
 #include "../trap.h"
 #include "../cpu.h"

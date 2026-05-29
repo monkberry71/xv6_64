@@ -6,6 +6,7 @@
 #include "proc.h"
 #include "gop.h"
 #include "params.h"
+#include "debug.h"
 
 void syscall_entry(void);
 void syscall_init(void) {
@@ -77,14 +78,35 @@ static syscall_func syscalls[] = {
     [SYS_draw]    =sys_draw
 };
 
+static void dump_syscall(const char *tag, uint64_t num, struct regi_pile *rp) {
+    struct proc *p = myproc();
+    serial_printf("%s pid=%x name=%s sys=%x rip=%x rsp=%x rbp=%x rax=%x",
+        tag, p->pid, p->name, num, rp->rcx, rp->rsp, rp->rbp, rp->rax);
+}
+
+static void dump_user_stack(struct proc *p, uint64_t rsp) {
+    uint64_t va0 = ROUNDDOWN(rsp, PGSIZE_4KB);
+    char *pa0 = uva2dma(p->pml4, (void*)va0);
+    uint64_t *sp = pa0 ? (uint64_t*)(pa0 + (rsp - va0)) : 0;
+    
+    serial_printf(" ustack=%x/%x/%x",
+        sp ? sp[0] : 0, sp ? sp[1] : 0, sp ? sp[2] : 0);
+}
+
 void syscall_dispatch(struct regi_pile *rp) {
     // dont use tf interrupt parts
     uint64_t num = rp->rax;
     myproc()->rp = rp;
 
-    
     if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
+        dump_syscall("enter", num, rp);
+        if (num == SYS_read) {
+            dump_user_stack(myproc(), rp->rsp);
+        }
+        serial_putc('\n');
         rp->rax = syscalls[num]();
+        dump_syscall("leave", num, rp);
+        serial_putc('\n');
     } else {
         serial_hex(num);
         serial_puts("<- unknown syscall\n");
