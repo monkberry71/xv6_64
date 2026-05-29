@@ -465,6 +465,10 @@ static struct inode* namex(char *path, int namei_parent, char *name) {
         iput(ip);
         ip = next;
     }
+    if(namei_parent) {
+        iput(ip);
+        return 0;
+    }
     return ip;
 }
 
