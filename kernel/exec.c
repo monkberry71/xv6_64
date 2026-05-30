@@ -35,7 +35,8 @@ int64_t exec(char *path, char **argv) {
     if(pml4 == 0) 
         goto bad;
 
-    uint64_t sz = 0;
+    // uint64_t sz = 0;
+    uint64_t sz = PGSIZE_4KB;
     struct prog_header *phs = (void*) elf.ph_off;
     for(short i = 0; i < elf.ph_num; i++) {
         uint64_t offset = (uint64_t) &phs[i];
@@ -64,6 +65,11 @@ int64_t exec(char *path, char **argv) {
         sz = alloc_uvm(pml4, sz, ph.vaddr + ph.mem_sz);
         if(sz == 0) 
             goto bad;
+            
+        // null page protection
+        if(ph.vaddr < PGSIZE_4KB) {
+            goto bad;
+        }
         
         // not aligned
         if(ph.vaddr % PGSIZE_4KB != 0)
@@ -72,6 +78,7 @@ int64_t exec(char *path, char **argv) {
         if(load_uvm(pml4, (void*)ph.vaddr, ip, ph.offset, ph.file_sz) < 0) {
             goto bad;
         }
+
 
     }
 

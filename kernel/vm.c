@@ -347,7 +347,8 @@ pte_t* copy_uvm(pte_t *pml4, uint64_t sz) {
     if(new_pml4 == 0) return 0;
 
     uint64_t addr;
-    for(addr = 0; addr < sz; addr += PGSIZE_4KB) {
+    // leave the first paage unmapped as null page
+    for(addr = PGSIZE_4KB; addr < sz; addr += PGSIZE_4KB) {
         pte_t *pte = walk_pml4(pml4, (void*) addr, 0);
         if(pte == 0) {
             panic("copy_uvm: pte should exist");
