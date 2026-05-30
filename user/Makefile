@@ -3,7 +3,7 @@ AS = fasm
 LD = ld
 
 BUILD_DIR ?= ../build/user
-ULIB = $(BUILD_DIR)/usys.o $(BUILD_DIR)/ulib.o
+ULIB = $(BUILD_DIR)/usys.o $(BUILD_DIR)/ulib.o $(BUILD_DIR)/umalloc.o
 
 CFLAGS = -m64 \
 -ffreestanding \

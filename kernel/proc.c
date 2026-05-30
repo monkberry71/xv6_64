@@ -468,7 +468,7 @@ void exit(void) {
     panic("I am dead");
 }
 
-int grow_proc(uint64_t n) {
+int grow_proc(int64_t n) {
     struct proc *cp = myproc();
     uint64_t sz = cp->sz;
 

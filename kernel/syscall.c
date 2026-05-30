@@ -104,14 +104,20 @@ void syscall_dispatch(struct regi_pile *rp) {
             dump_user_stack(myproc(), rp->rsp);
         }
         serial_putc('\n');
+        
+        ////////////////
         rp->rax = syscalls[num]();
+        ////////////////
+
         dump_syscall("leave", num, rp);
         serial_putc('\n');
+
     } else {
         serial_hex(num);
         serial_puts("<- unknown syscall\n");
         rp->rax = -1;
     }
+    if(myproc()->killed) exit();
 }
 
 int64_t sys_draw(void) {

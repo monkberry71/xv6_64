@@ -59,22 +59,35 @@ main(void)
     // printf(2, "\n");
     // wait();
 
-    printf(2, "pipe return test\n");
-    int p[2];
-    pipe(p);
+    // printf(2, "pipe return test\n");
+    // int p[2];
+    // pipe(p);
 
-    if(fork() == 0) {
-        close(p[0]);
-        close(p[1]);
-        exit();
-    }
+    // if(fork() == 0) {
+    //     close(p[0]);
+    //     close(p[1]);
+    //     exit();
+    // }
 
-    close(p[1]);
-    int n = read(p[0], buf, 10);
-    printf(2, "eof read=%d\n", n);
-    close(p[0]);
-    wait();
+    // close(p[1]);
+    // int n = read(p[0], buf, 10);
+    // printf(2, "eof read=%d\n", n);
+    // close(p[0]);
+    // wait();
 
+
+    printf(2, "malloc test\n");
+    char* mbuf = malloc(32);
+    memset(mbuf, 'a', 31);
+    mbuf[31] = '\0';
+    // write(2, mbuf, 32);
+    printf(2, "%s\n", mbuf);
+
+    char *a = malloc(16);
+    char *b = malloc(16);
+    free(a);
+    char *c = malloc(8);
+    if(a == c) printf(2, "free good\n");
 
 
     for(;;) {

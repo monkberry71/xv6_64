@@ -13,7 +13,7 @@
 int64_t exec(char *path, char **argv) {
     struct inode *ip = namei(path);
     if(ip == 0) {
-        cprintf("exec: failed");
+        cprintf("exec: failed\n");
         return -1;
     }
 

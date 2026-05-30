@@ -69,6 +69,9 @@ void trap(struct trap_frame *tf) {
         panic("DF DF DF");
     }
 
+    // kill check
+    if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER) exit();
+
     // give up 
     if(
         myproc() && // not scheduler
@@ -80,4 +83,7 @@ void trap(struct trap_frame *tf) {
     ) {
         yield();
     }
+
+    // kill check
+    if(myproc() && myproc()->killed && (tf->cs&3) == DPL_USER) exit();
 }

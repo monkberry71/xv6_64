@@ -48,4 +48,4 @@ void wakeup(void* chan);
 void sleep(void* chan, struct spin_lock *lk);
 int64_t wait(void);
 void exit(void);
-int grow_proc(uint64_t n);
+int grow_proc(int64_t n);

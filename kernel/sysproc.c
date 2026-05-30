@@ -20,7 +20,7 @@ int64_t sys_getpid(void) {
 
 
 int64_t sys_sbrk(void) {
-    int n = myproc()->rp->rdi;
+    int64_t n = myproc()->rp->rdi;
 
     uint64_t addr = myproc()->sz;
     if(grow_proc(n) < 0) return -1;
