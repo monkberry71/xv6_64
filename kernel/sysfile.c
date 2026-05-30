@@ -5,6 +5,7 @@
 #include "fs.h"
 #include "debug.h"
 #include "string.h"
+#include "pipe.h"
 
 #define CHECKFD(fd) if((fd) < 0 || (fd) >= NOFILE || (myproc()->ofile[(fd)]) == 0) return -1
 
@@ -309,3 +310,31 @@ bad:
     return -1;
 }
 
+int64_t sys_pipe(void) {
+    int *fd = (void*) myproc()->rp->rdi;
+
+    struct file *rf, *wf;
+    if(pipe_alloc(&rf, &wf) < 0) {
+        return -1;
+    }
+
+    int fd0 = fd_alloc(rf);
+    if(fd0 < 0) {
+        file_close(rf);
+        file_close(wf);
+        return -1;
+    }
+
+    int fd1 = fd_alloc(wf);
+    if(fd1 < 0) {
+        myproc()->ofile[fd0] = 0;
+        file_close(rf);
+        file_close(wf);
+        return -1;
+    }
+    
+    fd[0] = fd0;
+    fd[1] = fd1;
+
+    return 0;
+}

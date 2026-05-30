@@ -34,6 +34,49 @@ main(void)
     char buf[128];
     char *argv[MAXARGS];
 
+
+    // printf(2, "pipe test : ");
+    // int p[2];
+    // pipe(p);
+    // write(p[1], "x", 1);
+    // read(p[0], buf, 1);
+    // close(p[0]);
+    // close(p[1]);
+    // write(2, buf, 1);
+    // printf(2, "\n");
+
+    // printf(2, "pipe fork test : ");
+    // int p[2];
+    // pipe(p);
+    // if(fork() == 0) {
+    //     close(p[0]);
+    //     write(p[1], "hi\n", 3);
+    //     exit();
+    // }
+    // close(p[1]);
+    // read(p[0], buf, 3);
+    // write(2, buf, 3);
+    // printf(2, "\n");
+    // wait();
+
+    printf(2, "pipe return test\n");
+    int p[2];
+    pipe(p);
+
+    if(fork() == 0) {
+        close(p[0]);
+        close(p[1]);
+        exit();
+    }
+
+    close(p[1]);
+    int n = read(p[0], buf, 10);
+    printf(2, "eof read=%d\n", n);
+    close(p[0]);
+    wait();
+
+
+
     for(;;) {
         write(1, "$ ", 2);
 

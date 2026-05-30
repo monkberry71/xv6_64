@@ -17,7 +17,7 @@ struct file {
     int ref;
     char readable;
     char writable;
-    // struct pipe
+    struct pipe *pipe;
     struct inode *ip;
     uint64_t off;
 };

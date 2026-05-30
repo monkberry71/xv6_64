@@ -5,6 +5,7 @@
 #include "fs.h"
 #include "debug.h"
 #include "stat.h"
+#include "pipe.h"
 
 struct dev_sw devs[NDEV];
 struct {
@@ -63,6 +64,7 @@ void file_close(struct file *f) {
 
     if(ff.type == FD_PIPE) {
         // pipe_close
+        pipe_close(ff.pipe, ff.writable);
     } else if(ff.type == FD_INODE) {
         iput(ff.ip);
     }
@@ -83,7 +85,7 @@ int64_t file_read(struct file *f, char *addr, uint64_t n) {
     if(f->readable == 0) return -1;
     if(f->type == FD_PIPE) {
         // return pipe_read
-        return -1;
+        return pipe_read(f->pipe, addr, n);
     }
     if(f->type == FD_INODE) {
         ilock(f->ip);
@@ -100,8 +102,7 @@ int64_t file_read(struct file *f, char *addr, uint64_t n) {
 int64_t file_write(struct file *f, char *addr, uint64_t n) {
     if(f->writable == 0) return -1;
     if(f->type == FD_PIPE) {
-        // return pipe write
-        return -1;
+        return pipe_write(f->pipe, addr, n);
     }
     if(f->type == FD_INODE) {
         ilock(f->ip);
