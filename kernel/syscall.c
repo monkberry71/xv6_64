@@ -36,15 +36,15 @@ extern int64_t sys_exec(void);
 extern int64_t sys_exit(void);
 extern int64_t sys_fork(void);
 extern int64_t sys_fstat(void);
-// extern int64_t sys_getpid(void);
-// extern int64_t sys_kill(void);
+extern int64_t sys_getpid(void);
+extern int64_t sys_kill(void);
 // extern int64_t sys_link(void);
 extern int64_t sys_mkdir(void);
 extern int64_t sys_mknod(void);
 extern int64_t sys_open(void);
 extern int64_t sys_pipe(void);
 extern int64_t sys_read(void);
-// extern int64_t sys_sbrk(void);
+extern int64_t sys_sbrk(void);
 // extern int64_t sys_sleep(void);
 extern int64_t sys_unlink(void);
 extern int64_t sys_wait(void);
@@ -59,13 +59,13 @@ static syscall_func syscalls[] = {
     [SYS_wait]    =sys_wait,
     [SYS_pipe]    =sys_pipe,
     [SYS_read]    =sys_read,
-    // [SYS_kill]    =sys_kill,
+    [SYS_kill]    =sys_kill,
     [SYS_exec]    =sys_exec,
     [SYS_fstat]   =sys_fstat,
     [SYS_chdir]   =sys_chdir,
     [SYS_dup]     =sys_dup,
-    // [SYS_getpid]  =sys_getpid,
-    // [SYS_sbrk]    =sys_sbrk,
+    [SYS_getpid]  =sys_getpid,
+    [SYS_sbrk]    =sys_sbrk,
     // [SYS_sleep]   =sys_sleep,
     // [SYS_uptime]  =sys_uptime,
     [SYS_open]    =sys_open,

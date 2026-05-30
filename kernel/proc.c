@@ -8,6 +8,7 @@
 #include "debug.h"
 #include "memlayout.h"
 #include "fs.h"
+#include "vm.h"
 
 struct {
     struct spin_lock lock;
@@ -465,4 +466,39 @@ void exit(void) {
     curp->state = ZOMBIE;
     sched();
     panic("I am dead");
+}
+
+int grow_proc(uint64_t n) {
+    struct proc *cp = myproc();
+    uint64_t sz = cp->sz;
+
+    if(n > 0) {
+        sz = alloc_uvm(cp->pml4, sz, sz+n);
+        if(sz == 0) return -1;
+    } else if(n < 0) {
+        sz = dealloc_uvm(cp->pml4, sz, sz+n);
+        if(sz == 0) return -1;
+    }
+
+    cp->sz = sz;
+    switch_uvm(cp);
+    return 0;
+}
+
+int kill(uint64_t pid) {
+    acquire(&ptable.lock);
+    for(int i=0; i<NPROC;i ++) {
+        struct proc *p = &ptable.procs[i];
+        if(p->pid == pid) {
+            p->killed = 1;
+            
+            //wake some process if needed
+            if(p->state == SLEEPING) 
+                p->state = RUNNABLE;
+            release(&ptable.lock);
+            return 0;
+        }
+    }
+    release(&ptable.lock);
+    return -1;
 }

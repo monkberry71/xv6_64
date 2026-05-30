@@ -25,3 +25,4 @@ int load_uvm(pte_t *pml4, char *addr, struct inode *ip, uint64_t offset, uint64_
 void clear_pte_u(pte_t *pml4, char *uva);
 int copy_out(pte_t *pml4, uint64_t va, void* p, uint64_t len);
 char* uva2dma(pte_t *pml4, char *uva);
+uint64_t dealloc_uvm(pte_t *pml4, uint64_t old_sz, uint64_t new_sz) ;
