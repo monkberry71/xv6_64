@@ -261,6 +261,7 @@ int main(void) {
     add_file(rooti, "mkdir");
     add_file(rooti, "ls");
     add_file(rooti, "rm");
+    add_file(rooti, "nsh");
 
 
     save_img();
