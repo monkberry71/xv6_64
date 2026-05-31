@@ -256,12 +256,13 @@ int main(void) {
     dir_link(rooti, "console", console_ino);
 
     add_file(rooti, "init");
-    add_file(rooti, "sh");
+    // add_file(rooti, "sh");
     add_file(rooti, "cat");
     add_file(rooti, "mkdir");
     add_file(rooti, "ls");
     add_file(rooti, "rm");
     add_file(rooti, "nsh");
+    add_file(rooti, "echo");
 
 
     save_img();
