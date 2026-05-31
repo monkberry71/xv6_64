@@ -92,4 +92,4 @@ sudo dd if=build/usb.img of=/dev/sda bs=4M status=progress conv=fsync; sync
 
 ## Acknowledgements
 
-This project is derived from the MIT PDOS xv6. Most components follow xv6's design, while this repo ports the system to amd64/UEFI and adds project-specific changes.
+This project is derived from the [MIT PDOS xv6](https://github.com/mit-pdos/xv6-public). Most components follow xv6's design, while this repo ports the system to amd64/UEFI and adds project-specific changes.
